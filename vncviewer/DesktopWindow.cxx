@@ -892,7 +892,7 @@ void DesktopWindow::fullscreen_on()
     // -- Get FLTK displays and create an array with them in the order we expect.
 
     int fl_monitors_len = 0;
-    int fl_monitors[16][5] = {0};
+    int fl_monitors[16][5] = {{0}};
 
     for (fl_monitors_len = 0; fl_monitors_len < Fl::screen_count(); fl_monitors_len++) {
       Fl::screen_xywh(
