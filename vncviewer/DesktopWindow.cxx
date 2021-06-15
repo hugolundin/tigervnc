@@ -841,13 +841,13 @@ static int cmp(const void * a, const void * b)
     int * s1 = (int *) a;
     int * s2 = (int *) b;
 
-    if (s1[0] >= s2[0]) {
-        return 1;
+    if (s1[0] < s2[0]) {
+        return -1;
     }
 
     if (s1[0] == s2[0]) {
-        if (s1[1] >= s2[1]) {
-            return 1;
+        if (s1[1] < s2[1]) {
+            return -1;
         }
 
         if (s1[1] == s2[1]) {
@@ -855,7 +855,7 @@ static int cmp(const void * a, const void * b)
         }
     }
 
-    return -1;
+    return 1;
 }
 
 void DesktopWindow::fullscreen_on()
