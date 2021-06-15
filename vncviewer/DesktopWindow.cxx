@@ -917,7 +917,7 @@ void DesktopWindow::fullscreen_on()
 
         qsort(fl_monitors, fl_monitors_len, sizeof(*fl_monitors), cmp);
       
-        int fl_monitor_ids_len = monitor_ids_len;
+        fl_monitor_ids_len = monitor_ids_len;
         
         for (int i = 0; i < fl_monitor_ids_len; i++) {
           fl_monitor_ids[i] = fl_monitors[monitor_ids[i] - 1][4];
