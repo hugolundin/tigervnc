@@ -860,59 +860,68 @@ static int cmp(const void * a, const void * b)
 
 void DesktopWindow::fullscreen_on()
 {
+  // TODO: Is this the best way to check if it is enabled?
   bool selected_monitors_enabled = strnlen(fullScreenSelectedMonitors, 31) > 0;
 
   if (selected_monitors_enabled) {
 
-    // -- Get identifiers for all displays that we want to use.
-
-    // TODO: Use FLTK's max display constant here. 
-    int monitor_ids_len = 0;
-    int monitor_ids[16] = {0};
-
-    // Because sscanf will modifies the string it is parsing, we start by making
-    // a copy of the fullScreenSelectedMonitors configuration.
-    const char * selected_monitors = fullScreenSelectedMonitors.getValueStr();
-
-    // Parse what monitors to use in full screen.
-    for (monitor_ids_len = 0; monitor_ids_len < 16; monitor_ids_len++) {
-      int n;
-      int count = sscanf(selected_monitors, "%d,%n", &monitor_ids[monitor_ids_len], &n);
-      if (count != 1) {
-        break;
-      }
-
-      selected_monitors += n;
-    }
-
-    for (int i = 0; i < monitor_ids_len; i++) {
-      printf("Monitor %d\n", monitor_ids[i]);
-    }
-
-    // -- Get FLTK displays and create an array with them in the order we expect.
-
-    int fl_monitors_len = 0;
-    int fl_monitors[16][5] = {{0}};
-
-    for (fl_monitors_len = 0; fl_monitors_len < Fl::screen_count(); fl_monitors_len++) {
-      Fl::screen_xywh(
-        fl_monitors[fl_monitors_len][0],
-        fl_monitors[fl_monitors_len][1],
-        fl_monitors[fl_monitors_len][2],
-        fl_monitors[fl_monitors_len][3],
-        fl_monitors_len
-      );
-
-      fl_monitors[fl_monitors_len][4] = fl_monitors_len;
-    }
-
-    qsort(fl_monitors, fl_monitors_len, sizeof(*fl_monitors), cmp);
-
+    int fl_monitor_ids_len = 0;
     int fl_monitor_ids[16] = {0};
-    int fl_monitor_ids_len = monitor_ids_len;
-    
-    for (int i = 0; i < fl_monitor_ids_len; i++) {
-      fl_monitor_ids[i] = fl_monitors[monitor_ids[i] - 1][4];
+
+    if (!strncmp(fullScreenSelectedMonitors.getValueStr(), "all", 3)) {
+      fl_monitor_ids_len = Fl::screen_count();
+
+      for (int i = 0; i < fl_monitor_ids_len; i++) {
+        fl_monitor_ids[i] = i;
+      }
+    } else {
+        // -- Get identifiers for all displays that we want to use.
+        // TODO: Use FLTK's max display constant here. 
+        int monitor_ids_len = 0;
+        int monitor_ids[16] = {0};
+
+        // Because sscanf will modifies the string it is parsing, we start by making
+        // a copy of the fullScreenSelectedMonitors configuration.
+        const char * selected_monitors = fullScreenSelectedMonitors.getValueStr();
+
+        // Parse what monitors to use in full screen.
+        for (monitor_ids_len = 0; monitor_ids_len < 16; monitor_ids_len++) {
+          int n;
+          int count = sscanf(selected_monitors, "%d,%n", &monitor_ids[monitor_ids_len], &n);
+          if (count != 1) {
+            break;
+          }
+
+          selected_monitors += n;
+        }
+
+        for (int i = 0; i < monitor_ids_len; i++) {
+          printf("Monitor %d\n", monitor_ids[i]);
+        }
+
+        // -- Get FLTK displays and create an array with them in the order we expect.
+        int fl_monitors_len = 0;
+        int fl_monitors[16][5] = {{0}};
+
+        for (fl_monitors_len = 0; fl_monitors_len < Fl::screen_count(); fl_monitors_len++) {
+          Fl::screen_xywh(
+            fl_monitors[fl_monitors_len][0],
+            fl_monitors[fl_monitors_len][1],
+            fl_monitors[fl_monitors_len][2],
+            fl_monitors[fl_monitors_len][3],
+            fl_monitors_len
+          );
+
+          fl_monitors[fl_monitors_len][4] = fl_monitors_len;
+        }
+
+        qsort(fl_monitors, fl_monitors_len, sizeof(*fl_monitors), cmp);
+      
+        int fl_monitor_ids_len = monitor_ids_len;
+        
+        for (int i = 0; i < fl_monitor_ids_len; i++) {
+          fl_monitor_ids[i] = fl_monitors[monitor_ids[i] - 1][4];
+        }
     }
 
     int top, bottom, left, right;
@@ -928,26 +937,22 @@ void DesktopWindow::fullscreen_on()
     left_x = sx;
     right_x = sx + sw;
 
-    for (int i = 1; i < monitor_ids_len; i++) {
+    for (int i = 1; i <= fl_monitor_ids_len; i++) {
       Fl::screen_xywh(sx, sy, sw, sh, fl_monitor_ids[i]);
-      
+
       if (sy < top_y) {
-        top = i;
         top = fl_monitor_ids[i];
         top_y = sy;
       }
       if ((sy + sh) > bottom_y) {
-        bottom = i;
         bottom = fl_monitor_ids[i];
         bottom_y = sy + sh;
       }
       if (sx < left_x) {
-        left = i;
         left = fl_monitor_ids[i];
         left_x = sx;
       }
       if ((sx + sw) > right_x) {
-        right = i;
         right = fl_monitor_ids[i];
         right_x = sx + sw;
       }
