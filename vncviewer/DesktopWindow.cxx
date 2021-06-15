@@ -38,6 +38,7 @@
 #include "Surface.h"
 #include "Viewport.h"
 #include "touch.h"
+#include "Fullscreen.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Image_Surface.H>
@@ -455,7 +456,7 @@ void DesktopWindow::draw()
 
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active() && fullScreenAllMonitors) {
+    if (fullscreen_active() && Fullscreen::selectedMonitorsEnabled()) {
       assert(Fl::screen_count() >= 1);
       Fl::screen_xywh(sx, sy, sw, sh, 0);
     } else {
@@ -836,132 +837,12 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
   return ret;
 }
 
-static int cmp(const void * a, const void * b)
-{
-    int * s1 = (int *) a;
-    int * s2 = (int *) b;
-
-    if (s1[0] < s2[0]) {
-        return -1;
-    }
-
-    if (s1[0] == s2[0]) {
-        if (s1[1] < s2[1]) {
-            return -1;
-        }
-
-        if (s1[1] == s2[1]) {
-            return 0;
-        }
-    }
-
-    return 1;
-}
-
 void DesktopWindow::fullscreen_on()
 {
-  // TODO: Is this the best way to check if it is enabled?
-  bool selected_monitors_enabled = strnlen(fullScreenSelectedMonitors, 31) > 0;
+  int top, bottom, left, right;
 
-  if (selected_monitors_enabled) {
-
-    int fl_monitor_ids_len = 0;
-    int fl_monitor_ids[16] = {0};
-
-    if (!strncmp(fullScreenSelectedMonitors.getValueStr(), "all", 3)) {
-      fl_monitor_ids_len = Fl::screen_count();
-
-      for (int i = 0; i < fl_monitor_ids_len; i++) {
-        fl_monitor_ids[i] = i;
-      }
-    } else {
-        // -- Get identifiers for all displays that we want to use.
-        // TODO: Use FLTK's max display constant here. 
-        int monitor_ids_len = 0;
-        int monitor_ids[16] = {0};
-
-        // Because sscanf will modifies the string it is parsing, we start by making
-        // a copy of the fullScreenSelectedMonitors configuration.
-        const char * selected_monitors = fullScreenSelectedMonitors.getValueStr();
-
-        // Parse what monitors to use in full screen.
-        for (monitor_ids_len = 0; monitor_ids_len < 16; monitor_ids_len++) {
-          int n;
-          int count = sscanf(selected_monitors, "%d,%n", &monitor_ids[monitor_ids_len], &n);
-          if (count != 1) {
-            break;
-          }
-
-          selected_monitors += n;
-        }
-
-        for (int i = 0; i < monitor_ids_len; i++) {
-          printf("Monitor %d\n", monitor_ids[i]);
-        }
-
-        // -- Get FLTK displays and create an array with them in the order we expect.
-        int fl_monitors_len = 0;
-        int fl_monitors[16][5] = {{0}};
-
-        for (fl_monitors_len = 0; fl_monitors_len < Fl::screen_count(); fl_monitors_len++) {
-          Fl::screen_xywh(
-            fl_monitors[fl_monitors_len][0],
-            fl_monitors[fl_monitors_len][1],
-            fl_monitors[fl_monitors_len][2],
-            fl_monitors[fl_monitors_len][3],
-            fl_monitors_len
-          );
-
-          fl_monitors[fl_monitors_len][4] = fl_monitors_len;
-        }
-
-        qsort(fl_monitors, fl_monitors_len, sizeof(*fl_monitors), cmp);
-      
-        fl_monitor_ids_len = monitor_ids_len;
-        
-        for (int i = 0; i < fl_monitor_ids_len; i++) {
-          fl_monitor_ids[i] = fl_monitors[monitor_ids[i] - 1][4];
-        }
-    }
-
-    int top, bottom, left, right;
-    int top_y, bottom_y, left_x, right_x;
-
-    int sx, sy, sw, sh;
-
-    top = bottom = left = right = fl_monitor_ids[0];
-
-    Fl::screen_xywh(sx, sy, sw, sh, fl_monitor_ids[0]);
-    top_y = sy;
-    bottom_y = sy + sh;
-    left_x = sx;
-    right_x = sx + sw;
-
-    for (int i = 1; i <= fl_monitor_ids_len; i++) {
-      Fl::screen_xywh(sx, sy, sw, sh, fl_monitor_ids[i]);
-
-      if (sy < top_y) {
-        top = fl_monitor_ids[i];
-        top_y = sy;
-      }
-      if ((sy + sh) > bottom_y) {
-        bottom = fl_monitor_ids[i];
-        bottom_y = sy + sh;
-      }
-      if (sx < left_x) {
-        left = fl_monitor_ids[i];
-        left_x = sx;
-      }
-      if ((sx + sw) > right_x) {
-        right = fl_monitor_ids[i];
-        right_x = sx + sw;
-      }
-    }
-
-    fullscreen_screens(top, bottom, left, right);
-  } else {
-    fullscreen_screens(-1, -1, -1, -1);
-  }
+  Fullscreen::get_dimensions(top, bottom, left, right);
+  fullscreen_screens(top, bottom, left, right);
 
   if (!fullscreen_active())
     fullscreen();
