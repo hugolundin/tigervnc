@@ -38,7 +38,7 @@
 #include "Surface.h"
 #include "Viewport.h"
 #include "touch.h"
-#include "Fullscreen.h"
+#include "MonitorsHandler.h"
 
 #include <FL/Fl.H>
 #include <FL/Fl_Image_Surface.H>
@@ -456,7 +456,11 @@ void DesktopWindow::draw()
 
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active() && Fullscreen::selectedMonitorsEnabled()) {
+    if (fullscreen_active()
+        && (
+            MonitorsHandler::full_screen_selected_monitors_all() ||
+            MonitorsHandler::get_selected_monitors_count() > 1)
+    ) {
       assert(Fl::screen_count() >= 1);
       Fl::screen_xywh(sx, sy, sw, sh, 0);
     } else {
@@ -841,7 +845,12 @@ void DesktopWindow::fullscreen_on()
 {
   int top, bottom, left, right;
 
-  Fullscreen::get_dimensions(top, bottom, left, right);
+  if (MonitorsHandler::full_screen_selected_monitors()) {
+    MonitorsHandler::full_screen_dimensions(top, bottom, left, right);
+  } else {
+    top = bottom = left = right = -1;
+  }
+
   fullscreen_screens(top, bottom, left, right);
 
   if (!fullscreen_active())
