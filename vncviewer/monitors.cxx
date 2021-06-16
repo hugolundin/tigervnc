@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "MonitorsHandler.h"
+#include "monitors.h"
 #include "parameters.h"
 
 #include <FL/Fl.H>
@@ -66,8 +66,8 @@
 //
 int compare_monitors(const void * a, const void * b)
 {
-    struct MonitorsHandler::Monitor * monitor1 = (struct MonitorsHandler::Monitor *) a;
-    struct MonitorsHandler::Monitor * monitor2 = (struct MonitorsHandler::Monitor *) b;
+    Monitor * monitor1 = (Monitor *) a;
+    Monitor * monitor2 = (Monitor *) b;
 
     if (monitor1->x < monitor2->x) {
         return -1;
@@ -86,11 +86,43 @@ int compare_monitors(const void * a, const void * b)
     return 1;
 }
 
-int MonitorsHandler::get_monitors(struct Monitor * monitors, int monitors_len)
+int parse_selected_indices(int * indices, int indices_len)
+{   
+    if (full_screen_all_monitors_selected()) {
+        return 0;
+    }
+
+    // Because sscanf modifies the string it parses, we want to 
+    // make a copy before using it. 
+    const char * config = fullScreenSelectedMonitors.getValueStr();
+
+    int value = 0;
+    int count = 0;
+    int parsed_indices_len = 0;
+
+    while (*config) {
+        if (1 == sscanf(config, "%d%n", &value, &count)) {
+            indices[parsed_indices_len++] = value;
+        }
+
+        config += count;
+
+        // Scan until we find a new number.
+        for (; *config; config++) {
+            if (*config >= '0' && *config <= '9') {
+                break;
+            }
+        }
+    }
+
+    return parsed_indices_len;
+}
+
+int get_monitors(Monitor * monitors, int monitors_len)
 {
     int indices[FLTK_MAX_MONITORS] = {0};
     int indices_len = parse_selected_indices(indices, FLTK_MAX_MONITORS);
-    bool all_selected = full_screen_selected_monitors_all();
+    bool all_selected = full_screen_all_monitors_selected();
 
     // TODO: Make sure that monitors_len is big enough. 
     for (int i = 0; i < Fl::screen_count(); i++) {
@@ -131,9 +163,9 @@ int MonitorsHandler::get_monitors(struct Monitor * monitors, int monitors_len)
     return Fl::screen_count();
 }
 
-int MonitorsHandler::get_selected_monitors(struct Monitor * monitors, int monitors_len)
+int get_selected_monitors(Monitor * monitors, int monitors_len)
 {
-    struct Monitor all_monitors[FLTK_MAX_MONITORS] = {0};
+     Monitor all_monitors[FLTK_MAX_MONITORS] = {0};
     int all_monitors_len = get_monitors(all_monitors, FLTK_MAX_MONITORS);
     
     int count = 0;
@@ -146,12 +178,12 @@ int MonitorsHandler::get_selected_monitors(struct Monitor * monitors, int monito
     return count;
 }
 
-bool MonitorsHandler::full_screen_selected_monitors()
+bool full_screen_monitors_selected()
 {
     return strnlen(fullScreenSelectedMonitors, SELECTED_MONITORS_MAX_LEN) > 0;
 }
 
-bool MonitorsHandler::full_screen_selected_monitors_all()
+bool full_screen_all_monitors_selected()
 {
     return !strncmp(
         fullScreenSelectedMonitors.getValueStr(),
@@ -160,12 +192,10 @@ bool MonitorsHandler::full_screen_selected_monitors_all()
     );
 }
 
-void MonitorsHandler::full_screen_dimensions(int& top, int& bottom, int& left, int& right)
+void get_full_screen_dimensions(int& top, int& bottom, int& left, int& right)
 {
-    assert(full_screen_selected_monitors());
-
     int monitors_len = 0;
-    struct Monitor monitors[FLTK_MAX_MONITORS] = {0};
+     Monitor monitors[FLTK_MAX_MONITORS] = {0};
 
     monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
     if (monitors_len <= 0) {
@@ -174,7 +204,7 @@ void MonitorsHandler::full_screen_dimensions(int& top, int& bottom, int& left, i
     }
 
     int top_y, bottom_y, left_x, right_x;
-    struct Monitor * m = &monitors[0];
+     Monitor * m = &monitors[0];
 
     top = bottom = left = right = m->fltk_index;
     top_y = m->y;
@@ -207,52 +237,22 @@ void MonitorsHandler::full_screen_dimensions(int& top, int& bottom, int& left, i
     }
 }
 
-int MonitorsHandler::get_selected_monitors_count()
+int get_selected_monitors_count()
 {
     int indices[FLTK_MAX_MONITORS] = {0};
     return parse_selected_indices(indices, FLTK_MAX_MONITORS);
 }
 
-int MonitorsHandler::parse_selected_indices(int * indices, int indices_len)
-{   
-    if (full_screen_selected_monitors_all()) {
-        return 0;
-    }
 
-    // Because sscanf modifies the string it parses, we want to 
-    // make a copy before using it. 
-    const char * config = fullScreenSelectedMonitors.getValueStr();
 
-    int value = 0;
-    int count = 0;
-    int parsed_indices_len = 0;
-
-    while (*config) {
-        if (1 == sscanf(config, "%d%n", &value, &count)) {
-            indices[parsed_indices_len++] = value;
-        }
-
-        config += count;
-
-        // Scan until we find a new number.
-        for (; *config; config++) {
-            if (*config >= '0' && *config <= '9') {
-                break;
-            }
-        }
-    }
-
-    return parsed_indices_len;
-}
-
-void MonitorsHandler::primary_screen_dimensions(int& x, int& y, int& w, int& h)
+void get_primary_screen_dimensions(int& x, int& y, int& w, int& h)
 {
-    if (!full_screen_selected_monitors()) {
+    if (!full_screen_monitors_selected()) {
         Fl::screen_xywh(x, y, w, h, 0);
         return;
     }
 
-    struct Monitor monitors[FLTK_MAX_MONITORS] = {0};
+     Monitor monitors[FLTK_MAX_MONITORS] = {0};
     int monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
 
     int indices[FLTK_MAX_MONITORS] = {0};

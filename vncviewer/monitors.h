@@ -16,32 +16,25 @@
  * USA.
  */
 
-#ifndef __MONITORS_HANDLER_H__
-#define __MONITORS_HANDLER_H__
+#ifndef __MONITORS_H__
+#define __MONITORS_H__
 
-class MonitorsHandler
-{
-public:
-    struct Monitor {
-        int x;
-        int y;
-        int w;
-        int h;
-        int index;
-        bool selected;
-        int fltk_index;
-    };
+typedef struct {
+    int x;
+    int y;
+    int w;
+    int h;
+    int index;
+    bool selected;
+    int fltk_index;
+} Monitor;
 
-    static int get_monitors(struct Monitor *, int);
-    static int get_selected_monitors(struct Monitor *, int);
-    static int get_selected_monitors_count();
-    static void primary_screen_dimensions(int&, int&, int&, int&);
-    static bool full_screen_selected_monitors();
-    static bool full_screen_selected_monitors_all();
-    static void full_screen_dimensions(int&, int&, int&, int&);
-private:
-    static int parse_selected_indices(int *, int);
-    MonitorsHandler();
-};
+int get_monitors(Monitor *, int);
+int get_selected_monitors(Monitor *, int);
+int get_selected_monitors_count();
+void get_primary_screen_dimensions(int&, int&, int&, int&);
+bool full_screen_monitors_selected();
+bool full_screen_all_monitors_selected();
+void get_full_screen_dimensions(int&, int&, int&, int&);
 
 #endif

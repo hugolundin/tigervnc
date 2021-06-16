@@ -17,7 +17,7 @@ set(VNCVIEWER_SOURCES
   parameters.cxx
   keysym2ucs.c
   touch.cxx
-  MonitorsHandler.cxx
+  monitors.cxx
   vncviewer.cxx)
 
 if(WIN32)
