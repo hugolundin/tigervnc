@@ -25,8 +25,8 @@ public:
     struct Monitor {
         int x;
         int y;
-        int width;
-        int height;
+        int w;
+        int h;
         int index;
         bool selected;
         int fltk_index;
@@ -35,6 +35,7 @@ public:
     static int get_monitors(struct Monitor *, int);
     static int get_selected_monitors(struct Monitor *, int);
     static int get_selected_monitors_count();
+    static void primary_screen_dimensions(int&, int&, int&, int&);
     static bool full_screen_selected_monitors();
     static bool full_screen_selected_monitors_all();
     static void full_screen_dimensions(int&, int&, int&, int&);

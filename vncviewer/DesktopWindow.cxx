@@ -472,7 +472,7 @@ void DesktopWindow::draw()
             MonitorsHandler::get_selected_monitors_count() > 1)
     ) {
       assert(Fl::screen_count() >= 1);
-      Fl::screen_xywh(sx, sy, sw, sh, 0);
+      MonitorsHandler::primary_screen_dimensions(sx, sy, sw, sh);
     } else {
       sx = 0;
       sy = 0;

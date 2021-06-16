@@ -99,8 +99,8 @@ int MonitorsHandler::get_monitors(struct Monitor * monitors, int monitors_len)
         Fl::screen_xywh(
             monitors[i].x,
             monitors[i].y,
-            monitors[i].width,
-            monitors[i].height,
+            monitors[i].w,
+            monitors[i].h,
             i
         );
 
@@ -173,37 +173,36 @@ void MonitorsHandler::full_screen_dimensions(int& top, int& bottom, int& left, i
         return;
     }
 
-    int sx, sy, sw, sh;
     int top_y, bottom_y, left_x, right_x;
+    struct Monitor * m = &monitors[0];
 
-    top = bottom = left = right = monitors[0].fltk_index;
-    Fl::screen_xywh(sx, sy, sw, sh, monitors[0].fltk_index);
-    top_y = sy;
-    bottom_y = sy + sh;
-    left_x = sx;
-    right_x = sx + sw;
+    top = bottom = left = right = m->fltk_index;
+    top_y = m->y;
+    bottom_y = m->y + m->h;
+    left_x = m->x;
+    right_x = m->x + m->w;
 
     for (int i = 1; i < monitors_len; i++) {
-        Fl::screen_xywh(sx, sy, sw, sh, monitors[i].fltk_index);
+        m = &monitors[i];
 
-        if (sy < top_y) {
-            top = monitors[i].fltk_index;
-            top_y = sy;
+        if (m->y < top_y) {
+            top = m->fltk_index;
+            top_y = m->y;
         }
 
-        if ((sy + sh) > bottom_y) {
-            bottom = monitors[i].fltk_index;
-            bottom_y = sy + sh;
+        if ((m->y + m->h) > bottom_y) {
+            bottom = m->fltk_index;
+            bottom_y = m->y + m->h;
         }
 
-        if (sx < left_x) {
-            left = monitors[i].fltk_index;
-            left_x = sx;
+        if (m->x < left_x) {
+            left = m->fltk_index;
+            left_x = m->x;
         }
 
-        if ((sx + sw) > right_x) {
-            right = monitors[i].fltk_index;
-            right_x = sx + sw;
+        if ((m->x + m->w) > right_x) {
+            right = m->fltk_index;
+            right_x = m->x + m->w;
         }
     }
 }
@@ -222,7 +221,7 @@ int MonitorsHandler::parse_selected_indices(int * indices, int indices_len)
 
     // Because sscanf modifies the string it parses, we want to 
     // make a copy before using it. 
-    const char * config = fullScreenSelectedMonitors.getValueStr() + '\0';
+    const char * config = fullScreenSelectedMonitors.getValueStr();
 
     int value = 0;
     int count = 0;
@@ -244,4 +243,30 @@ int MonitorsHandler::parse_selected_indices(int * indices, int indices_len)
     }
 
     return parsed_indices_len;
+}
+
+void MonitorsHandler::primary_screen_dimensions(int& x, int& y, int& w, int& h)
+{
+    if (!full_screen_selected_monitors()) {
+        Fl::screen_xywh(x, y, w, h, 0);
+        return;
+    }
+
+    struct Monitor monitors[FLTK_MAX_MONITORS] = {0};
+    int monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
+
+    int indices[FLTK_MAX_MONITORS] = {0};
+    int indices_len = parse_selected_indices(indices, FLTK_MAX_MONITORS);
+
+    int found_index = 0;
+
+    for (int i = 0; i < indices_len; i++) {
+        for (int j = 0; j < monitors_len; j++) {
+            if (indices[i] == monitors[j].index) {
+                found_index = j;
+            }
+        }
+    }
+
+    Fl::screen_xywh(x, y, w, h, monitors[found_index].fltk_index);
 }
