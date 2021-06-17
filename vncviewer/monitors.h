@@ -31,10 +31,7 @@ typedef struct {
 
 int get_monitors(Monitor *, int);
 int get_selected_monitors(Monitor *, int);
-int get_selected_monitors_count();
-void get_primary_screen_dimensions(int&, int&, int&, int&);
-bool full_screen_monitors_selected();
-bool full_screen_all_monitors_selected();
 void get_full_screen_dimensions(int&, int&, int&, int&);
+int get_primary_screen_fltk_index();
 
 #endif

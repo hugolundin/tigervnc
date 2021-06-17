@@ -464,15 +464,18 @@ void DesktopWindow::draw()
     int ox, oy, ow, oh;
     int sx, sy, sw, sh;
 
+    // Multiple monitors has been selected if the config contains
+    // a list of numbers (e.g. "1,2,3") or the string "all". 
+    bool multiple_monitors_selected = 
+      (strchr(fullScreenSelectedMonitors, ',') == NULL) ||
+      (strcmp(fullScreenSelectedMonitors, "all") == 0);
+
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active()
-        && (
-            full_screen_all_monitors_selected() ||
-            get_selected_monitors_count() > 1)
-    ) {
+    if (fullscreen_active() && multiple_monitors_selected) {
       assert(Fl::screen_count() >= 1);
-      get_primary_screen_dimensions(sx, sy, sw, sh);
+
+      Fl::screen_xywh(sx, sy, sw, sh, get_primary_screen_fltk_index());
     } else {
       sx = 0;
       sy = 0;
@@ -859,7 +862,7 @@ void DesktopWindow::fullscreen_on()
 {
   int top, bottom, left, right;
 
-  if (full_screen_monitors_selected()) {
+  if (strcmp(fullScreenSelectedMonitors, "") != 0) {
     get_full_screen_dimensions(top, bottom, left, right);
   } else {
     top = bottom = left = right = -1;
