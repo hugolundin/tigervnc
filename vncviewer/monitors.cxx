@@ -96,7 +96,7 @@ int compare_coordinates(const void * a, const void * b)
     return 1;
 }
 
-void get_selected_indices(std::set<int> indices)
+void get_selected_indices(std::set<int>& indices)
 {   
     // If all monitors are selected, no indices can be parsed. 
     if (strcmp(fullScreenSelectedMonitors, "all") == 0) {
@@ -130,6 +130,7 @@ void get_monitors(std::vector<Monitor>& monitors)
 {
     std::set<int> indices;
     get_selected_indices(indices);
+
 
     bool all_monitors_selected = strcmp(fullScreenSelectedMonitors, "all") == 0;
 
@@ -171,12 +172,12 @@ void get_selected_monitors(std::vector<Monitor>& monitors)
     get_monitors(all_monitors);
 
     for (
-        std::vector<Monitor>::iterator it = all_monitors.begin();
-        it != all_monitors.end();
-        it++
+        std::vector<Monitor>::iterator monitor = all_monitors.begin();
+        monitor != all_monitors.end();
+        monitor++
     ) {
-        if (it->selected) {
-            monitors.push_back(*it);
+        if (monitor->selected) {
+            monitors.push_back(*monitor);
         }
     }
 }
