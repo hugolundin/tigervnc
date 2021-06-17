@@ -34,6 +34,16 @@
 #define SELECTED_MONITORS_MAX_LEN 31
 #define SELECTED_MONITORS_ALL_STR "all"
 
+typedef struct {
+    int x;
+    int y;
+    int w;
+    int h;
+    int index;
+    bool selected;
+    int fltk_index;
+} Monitor;
+
 // Callback function for `qsort` to sort the monitors. 
 // They are sorted after their coordinates: smallest x-coordinate first
 // and if there is a conflict, smallest y-coordinate. 
@@ -64,7 +74,7 @@
 //  |   1   |  |   3   | |   4   |
 //  +-------+  +-------+ +-------+
 //
-int compare_monitors(const void * a, const void * b)
+int compare_coordinates(const void * a, const void * b)
 {
     Monitor * monitor1 = (Monitor *) a;
     Monitor * monitor2 = (Monitor *) b;
@@ -86,7 +96,7 @@ int compare_monitors(const void * a, const void * b)
     return 1;
 }
 
-int parse_selected_indices(int * indices, int indices_len)
+int get_selected_indices(int * indices, int indices_len)
 {   
     // If all monitors are selected, no indices can be parsed. 
     if (strcmp(fullScreenSelectedMonitors, "all") == 0) {
@@ -122,7 +132,7 @@ int parse_selected_indices(int * indices, int indices_len)
 int get_monitors(Monitor * monitors, int monitors_len)
 {
     int indices[FLTK_MAX_MONITORS] = {0};
-    int indices_len = parse_selected_indices(indices, FLTK_MAX_MONITORS);
+    int indices_len = get_selected_indices(indices, FLTK_MAX_MONITORS);
     bool all_monitors_selected = (strcmp(fullScreenSelectedMonitors, "all") == 0);
 
     // TODO: Make sure that monitors_len is big enough. 
@@ -143,7 +153,7 @@ int get_monitors(Monitor * monitors, int monitors_len)
 
     // Sort the monitors such that indices from the config file corresponds
     // to the layout of the monitors.
-    qsort(monitors, Fl::screen_count(), sizeof(*monitors), compare_monitors);
+    qsort(monitors, Fl::screen_count(), sizeof(*monitors), compare_coordinates);
 
     for (int i = 0; i < Fl::screen_count(); i++) {
         
@@ -187,7 +197,7 @@ void get_full_screen_dimensions(int& top, int& bottom, int& left, int& right)
     }
 
     int top_y, bottom_y, left_x, right_x;
-     Monitor * m = &monitors[0];
+    Monitor * m = &monitors[0];
 
     top = bottom = left = right = m->fltk_index;
     top_y = m->y;
@@ -242,14 +252,25 @@ int get_primary_screen_fltk_index()
         return FLTK_PRIMARY_MONITOR;
     }
 
+    int indices[FLTK_MAX_MONITORS];
     Monitor monitors[FLTK_MAX_MONITORS];
-    int monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
 
-    // Unable to parse, use 
+    int indices_len = get_selected_indices(indices, FLTK_MAX_MONITORS);
+    if (indices_len <= 0) {
+        return FLTK_PRIMARY_MONITOR;
+    }
+
+    int monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
     if (monitors_len <= 0) {
         return FLTK_PRIMARY_MONITOR;
     }
 
-    // Return the FLTK index of the first display given in the config.
-    return monitors[0].fltk_index;
+    // Find the monitor with the first selected index. 
+    for (int i = 0; i < monitors_len; i++) {
+        if (indices[0] == monitors[i].index) {
+            return monitors[i].fltk_index;
+        }
+    }
+
+    return FLTK_PRIMARY_MONITOR;
 }

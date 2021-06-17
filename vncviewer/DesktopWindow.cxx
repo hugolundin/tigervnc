@@ -467,7 +467,7 @@ void DesktopWindow::draw()
     // Multiple monitors has been selected if the config contains
     // a list of numbers (e.g. "1,2,3") or the string "all". 
     bool multiple_monitors_selected = 
-      (strchr(fullScreenSelectedMonitors, ',') == NULL) ||
+      (strchr(fullScreenSelectedMonitors, ',') != NULL) ||
       (strcmp(fullScreenSelectedMonitors, "all") == 0);
 
     // Make sure it's properly seen by adjusting it relative to the

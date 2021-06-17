@@ -19,18 +19,6 @@
 #ifndef __MONITORS_H__
 #define __MONITORS_H__
 
-typedef struct {
-    int x;
-    int y;
-    int w;
-    int h;
-    int index;
-    bool selected;
-    int fltk_index;
-} Monitor;
-
-int get_monitors(Monitor *, int);
-int get_selected_monitors(Monitor *, int);
 void get_full_screen_dimensions(int&, int&, int&, int&);
 int get_primary_screen_fltk_index();
 
