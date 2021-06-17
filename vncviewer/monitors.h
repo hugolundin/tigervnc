@@ -19,6 +19,17 @@
 #ifndef __MONITORS_H__
 #define __MONITORS_H__
 
+typedef struct {
+    int x;
+    int y;
+    int w;
+    int h;
+    int index;
+    bool selected;
+    int fltk_index;
+} Monitor;
+
+void get_monitors(std::vector<Monitor>& monitors);
 void get_full_screen_dimensions(int&, int&, int&, int&);
 
 #endif

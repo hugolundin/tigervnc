@@ -20,8 +20,11 @@
 #define __OPTIONSDIALOG_H__
 
 #include <map>
+#include <vector>
 
 #include <FL/Fl_Window.H>
+#include "monitors.h"
+#include "MonitorArrangementWidget.h"
 
 class Fl_Widget;
 class Fl_Group;
@@ -126,6 +129,10 @@ protected:
   Fl_Check_Button *remoteResizeCheckbox;
   Fl_Check_Button *fullScreenCheckbox;
   Fl_Check_Button *fullScreenAllMonitorsCheckbox;
+  MonitorArrangementWidget * monitorsArrangement;
+
+  std::vector<Monitor> m_monitors;
+
 
   /* Misc. */
   Fl_Check_Button *sharedCheckbox;

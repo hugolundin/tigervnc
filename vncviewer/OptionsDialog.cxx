@@ -38,6 +38,7 @@
 #include "i18n.h"
 #include "menukey.h"
 #include "parameters.h"
+#include "monitors.h"
 
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Button.H>
@@ -71,6 +72,8 @@ OptionsDialog::OptionsDialog()
     createCompressionPage(tx, ty, tw, th);
     createSecurityPage(tx, ty, tw, th);
     createInputPage(tx, ty, tw, th);
+
+    get_monitors(m_monitors);
     createScreenPage(tx, ty, tw, th);
     createMiscPage(tx, ty, tw, th);
   }
@@ -128,8 +131,11 @@ void OptionsDialog::removeCallback(OptionsCallback *cb)
 void OptionsDialog::show(void)
 {
   /* show() gets called for raise events as well */
-  if (!shown())
+  if (!shown()) {
     loadOptions();
+    get_monitors(m_monitors);
+  }
+
 
   Fl_Window::show();
 }
@@ -791,6 +797,9 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
                                                       CHECK_HEIGHT,
                                                       _("Enable full-screen mode over all monitors")));
   ty += CHECK_HEIGHT + TIGHT_MARGIN;
+
+
+  monitorsArrangement = new MonitorArrangementWidget(tx + INDENT, ty, 200, 100, m_monitors);
 
   group->end();
 }

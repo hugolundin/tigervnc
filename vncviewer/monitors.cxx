@@ -34,16 +34,6 @@
 #define SELECTED_MONITORS_MAX_LEN 31
 #define SELECTED_MONITORS_ALL_STR "all"
 
-typedef struct {
-    int x;
-    int y;
-    int w;
-    int h;
-    int index;
-    bool selected;
-    int fltk_index;
-} Monitor;
-
 // Callback function for `qsort` to sort the monitors. 
 // They are sorted after their coordinates: smallest x-coordinate first
 // and if there is a conflict, smallest y-coordinate. 
@@ -130,7 +120,6 @@ void get_monitors(std::vector<Monitor>& monitors)
 {
     std::set<int> indices;
     get_selected_indices(indices);
-
 
     bool all_monitors_selected = strcmp(fullScreenSelectedMonitors, "all") == 0;
 
