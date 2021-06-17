@@ -474,8 +474,7 @@ void DesktopWindow::draw()
     // primary screen rather than the entire window
     if (fullscreen_active() && multiple_monitors_selected) {
       assert(Fl::screen_count() >= 1);
-
-      Fl::screen_xywh(sx, sy, sw, sh, get_primary_screen_fltk_index());
+      Fl::screen_xywh(sx, sy, sw, sh, 0);
     } else {
       sx = 0;
       sy = 0;
