@@ -19,7 +19,7 @@
 #ifndef __MONITORS_H__
 #define __MONITORS_H__
 
-void get_full_screen_dimensions(int&, int&, int&, int&);
 int get_primary_screen_fltk_index();
+void get_full_screen_dimensions(int&, int&, int&, int&);
 
 #endif

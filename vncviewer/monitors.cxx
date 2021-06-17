@@ -21,16 +21,16 @@
 #endif
 
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
+#include <vector>
+#include <set>
 
 #include "monitors.h"
 #include "parameters.h"
 
 #include <FL/Fl.H>
 
-// TODO: Find existing define to use.
-#define FLTK_MAX_MONITORS 16
 #define SELECTED_MONITORS_MAX_LEN 31
 #define SELECTED_MONITORS_ALL_STR "all"
 
@@ -96,11 +96,11 @@ int compare_coordinates(const void * a, const void * b)
     return 1;
 }
 
-int get_selected_indices(int * indices, int indices_len)
+void get_selected_indices(std::set<int> indices)
 {   
     // If all monitors are selected, no indices can be parsed. 
     if (strcmp(fullScreenSelectedMonitors, "all") == 0) {
-        return 0;
+        return;
     }
 
     // Because sscanf modifies the string it parses, we want to 
@@ -109,11 +109,10 @@ int get_selected_indices(int * indices, int indices_len)
 
     int value = 0;
     int count = 0;
-    int parsed_indices_len = 0;
 
     while (*config) {
         if (1 == sscanf(config, "%d%n", &value, &count)) {
-            indices[parsed_indices_len++] = value;
+            indices.insert(value);
         }
 
         config += count;
@@ -125,107 +124,101 @@ int get_selected_indices(int * indices, int indices_len)
             }
         }
     }
-
-    return parsed_indices_len;
 }
 
-int get_monitors(Monitor * monitors, int monitors_len)
+void get_monitors(std::vector<Monitor>& monitors)
 {
-    int indices[FLTK_MAX_MONITORS] = {0};
-    int indices_len = get_selected_indices(indices, FLTK_MAX_MONITORS);
-    bool all_monitors_selected = (strcmp(fullScreenSelectedMonitors, "all") == 0);
+    std::set<int> indices;
+    get_selected_indices(indices);
 
-    // TODO: Make sure that monitors_len is big enough. 
+    bool all_monitors_selected = strcmp(fullScreenSelectedMonitors, "all") == 0;
+
     for (int i = 0; i < Fl::screen_count(); i++) {
+        Monitor monitor = {0};
 
         // Get the properties of the monitor at the current index;
         Fl::screen_xywh(
-            monitors[i].x,
-            monitors[i].y,
-            monitors[i].w,
-            monitors[i].h,
+            monitor.x,
+            monitor.y,
+            monitor.w,
+            monitor.h,
             i
         );
 
-        monitors[i].fltk_index = i;
-        monitors[i].selected = all_monitors_selected ? true : false;
+        monitor.fltk_index = i;
+        monitor.selected = all_monitors_selected ? true : false;
+        monitors.push_back(monitor);
     }
 
     // Sort the monitors such that indices from the config file corresponds
     // to the layout of the monitors.
-    qsort(monitors, Fl::screen_count(), sizeof(*monitors), compare_coordinates);
+    qsort(&monitors[0], monitors.size(), sizeof(*(&monitors[0])), compare_coordinates);
 
-    for (int i = 0; i < Fl::screen_count(); i++) {
+    for (std::vector<Monitor>::size_type i = 0; i < monitors.size(); i++) {
         
         // Configuration indices start at 1. 
         monitors[i].index = i + 1;
 
-        for (int j = 0; j < indices_len; j++) {
-            if (monitors[i].index == indices[j]) {
-                monitors[i].selected = true;
-            }
+        if (indices.find(monitors[i].index) != indices.end()) {
+            monitors[i].selected = true;
         }
     }
-
-    return Fl::screen_count();
 }
 
-int get_selected_monitors(Monitor * monitors, int monitors_len)
+void get_selected_monitors(std::vector<Monitor>& monitors)
 {
-    Monitor all_monitors[FLTK_MAX_MONITORS] = {0};
-    int all_monitors_len = get_monitors(all_monitors, FLTK_MAX_MONITORS);
-    
-    int count = 0;
-    for (int i = 0; i < all_monitors_len; i++) {
-        if (all_monitors[i].selected) {
-            monitors[count++] = all_monitors[i];
+    std::vector<Monitor> all_monitors;
+    get_monitors(all_monitors);
+
+    for (
+        std::vector<Monitor>::iterator it = all_monitors.begin();
+        it != all_monitors.end();
+        it++
+    ) {
+        if (it->selected) {
+            monitors.push_back(*it);
         }
     }
-
-    return count;
 }
 
 void get_full_screen_dimensions(int& top, int& bottom, int& left, int& right)
 {
-    int monitors_len = 0;
-    Monitor monitors[FLTK_MAX_MONITORS] = {0};
+    std::vector<Monitor> monitors;
+    get_selected_monitors(monitors);
 
-    monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
-    if (monitors_len <= 0) {
+    if (monitors.size() <= 0) {
         top = bottom = left = right = -1;
         return;
     }
 
     int top_y, bottom_y, left_x, right_x;
-    Monitor * m = &monitors[0];
+    std::vector<Monitor>::iterator monitor = monitors.begin();
 
-    top = bottom = left = right = m->fltk_index;
-    top_y = m->y;
-    bottom_y = m->y + m->h;
-    left_x = m->x;
-    right_x = m->x + m->w;
+    top = bottom = left = right = monitor->fltk_index;
+    top_y = monitor->y;
+    bottom_y = monitor->y + monitor->h;
+    left_x = monitor->x;
+    right_x = monitor->x + monitor->w;
 
-    for (int i = 1; i < monitors_len; i++) {
-        m = &monitors[i];
-
-        if (m->y < top_y) {
-            top = m->fltk_index;
-            top_y = m->y;
+    for (; monitor != monitors.end(); monitor++) {
+        if (monitor->y < top_y) {
+            top = monitor->fltk_index;
+            top_y = monitor->y;
         }
 
-        if ((m->y + m->h) > bottom_y) {
-            bottom = m->fltk_index;
-            bottom_y = m->y + m->h;
+        if ((monitor->y + monitor->h) > bottom_y) {
+            bottom = monitor->fltk_index;
+            bottom_y = monitor->y + monitor->h;
         }
 
-        if (m->x < left_x) {
-            left = m->fltk_index;
-            left_x = m->x;
+        if (monitor->x < left_x) {
+            left = monitor->fltk_index;
+            left_x = monitor->x;
         }
 
-        if ((m->x + m->w) > right_x) {
-            right = m->fltk_index;
-            right_x = m->x + m->w;
+        if ((monitor->x + monitor->w) > right_x) {
+            right = monitor->fltk_index;
+            right_x = monitor->x + monitor->w;
         }
     }
 }
@@ -252,22 +245,19 @@ int get_primary_screen_fltk_index()
         return FLTK_PRIMARY_MONITOR;
     }
 
-    int indices[FLTK_MAX_MONITORS];
-    Monitor monitors[FLTK_MAX_MONITORS];
+    std::set<int> indices;
+    get_selected_indices(indices);
 
-    int indices_len = get_selected_indices(indices, FLTK_MAX_MONITORS);
-    if (indices_len <= 0) {
+    if (indices.size() <= 0) {
         return FLTK_PRIMARY_MONITOR;
     }
 
-    int monitors_len = get_selected_monitors(monitors, FLTK_MAX_MONITORS);
-    if (monitors_len <= 0) {
-        return FLTK_PRIMARY_MONITOR;
-    }
+    std::vector<Monitor> monitors;
+    get_selected_monitors(monitors);
 
     // Find the monitor with the first selected index. 
-    for (int i = 0; i < monitors_len; i++) {
-        if (indices[0] == monitors[i].index) {
+    for (std::vector<Monitor>::size_type i = 0; i < monitors.size(); i++) {
+        if (*indices.begin() == monitors[i].index) {
             return monitors[i].fltk_index;
         }
     }
