@@ -297,7 +297,10 @@ void OptionsDialog::loadOptions(void)
   }
   remoteResizeCheckbox->value(remoteResize);
   fullScreenCheckbox->value(fullScreen);
-  fullScreenAllMonitorsCheckbox->value(fullScreenAllMonitors);
+
+  if (strcmp(fullScreenSelectedMonitors, "all") == 0) {
+    fullScreenAllMonitorsCheckbox->value(1);
+  }
 
   handleDesktopSize(desktopSizeCheckbox, this);
 
@@ -407,7 +410,11 @@ void OptionsDialog::storeOptions(void)
   }
   remoteResize.setParam(remoteResizeCheckbox->value());
   fullScreen.setParam(fullScreenCheckbox->value());
-  fullScreenAllMonitors.setParam(fullScreenAllMonitorsCheckbox->value());
+
+  // TODO: Why is this not working? 
+  if (fullScreenAllMonitorsCheckbox->value() == 1) {
+    fullScreenSelectedMonitors.setParam("all");
+  }
 
   /* Misc. */
   shared.setParam(sharedCheckbox->value());

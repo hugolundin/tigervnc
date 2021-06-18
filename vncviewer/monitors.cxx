@@ -34,16 +34,6 @@
 #define SELECTED_MONITORS_MAX_LEN 31
 #define SELECTED_MONITORS_ALL_STR "all"
 
-typedef struct {
-    int x;
-    int y;
-    int w;
-    int h;
-    int index;
-    bool selected;
-    int fltk_index;
-} Monitor;
-
 // Callback function for `qsort` to sort the monitors. 
 // They are sorted after their coordinates: smallest x-coordinate first
 // and if there is a conflict, smallest y-coordinate. 
@@ -74,7 +64,7 @@ typedef struct {
 //  |   1   |  |   3   | |   4   |
 //  +-------+  +-------+ +-------+
 //
-int compare_coordinates(const void * a, const void * b)
+int coordinates_sort_cb(const void * a, const void * b)
 {
     Monitor * monitor1 = (Monitor *) a;
     Monitor * monitor2 = (Monitor *) b;
@@ -96,7 +86,7 @@ int compare_coordinates(const void * a, const void * b)
     return 1;
 }
 
-void get_selected_indices(std::set<int>& indices)
+void load_selected_indices(std::set<int>& indices)
 {   
     // If all monitors are selected, no indices can be parsed. 
     if (strcmp(fullScreenSelectedMonitors, "all") == 0) {
@@ -126,11 +116,10 @@ void get_selected_indices(std::set<int>& indices)
     }
 }
 
-void get_monitors(std::vector<Monitor>& monitors)
+void load_monitors(std::vector<Monitor>& monitors)
 {
     std::set<int> indices;
-    get_selected_indices(indices);
-
+    load_selected_indices(indices);
 
     bool all_monitors_selected = strcmp(fullScreenSelectedMonitors, "all") == 0;
 
@@ -153,7 +142,7 @@ void get_monitors(std::vector<Monitor>& monitors)
 
     // Sort the monitors such that indices from the config file corresponds
     // to the layout of the monitors.
-    qsort(&monitors[0], monitors.size(), sizeof(*(&monitors[0])), compare_coordinates);
+    qsort(&monitors[0], monitors.size(), sizeof(*(&monitors[0])), coordinates_sort_cb);
 
     for (std::vector<Monitor>::size_type i = 0; i < monitors.size(); i++) {
         
@@ -166,10 +155,10 @@ void get_monitors(std::vector<Monitor>& monitors)
     }
 }
 
-void get_selected_monitors(std::vector<Monitor>& monitors)
+void load_selected_monitors(std::vector<Monitor>& monitors)
 {
     std::vector<Monitor> all_monitors;
-    get_monitors(all_monitors);
+    load_monitors(all_monitors);
 
     for (
         std::vector<Monitor>::iterator monitor = all_monitors.begin();
@@ -185,7 +174,9 @@ void get_selected_monitors(std::vector<Monitor>& monitors)
 void get_full_screen_dimensions(int& top, int& bottom, int& left, int& right)
 {
     std::vector<Monitor> monitors;
-    get_selected_monitors(monitors);
+    load_selected_monitors(monitors);
+
+    printf("hi!\n");
 
     if (monitors.size() <= 0) {
         top = bottom = left = right = -1;
