@@ -463,16 +463,11 @@ void DesktopWindow::draw()
   if (overlay) {
     int ox, oy, ow, oh;
     int sx, sy, sw, sh;
-
-    // Multiple monitors has been selected if the config contains
-    // a list of numbers (e.g. "1,2,3") or the string "all". 
-    bool multiple_monitors_selected = 
-      (strchr(fullScreenSelectedMonitors, ',') != NULL) ||
-      (strcmp(fullScreenSelectedMonitors, "all") == 0);
+    bool multiple_monitors = (strcmp(fullScreenSelectedMonitors, "") != 0) || fullScreenAllMonitors;
 
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active() && multiple_monitors_selected) {
+    if (fullscreen_active() && multiple_monitors) {
       assert(Fl::screen_count() >= 1);
       Fl::screen_xywh(sx, sy, sw, sh, 0);
     } else {
@@ -861,7 +856,10 @@ void DesktopWindow::fullscreen_on()
 {
   int top, bottom, left, right;
 
-  if (strcmp(fullScreenSelectedMonitors, "") != 0) {
+  bool multiple_monitors =
+    (strcmp(fullScreenSelectedMonitors, "") != 0) || fullScreenAllMonitors;
+
+  if (multiple_monitors) {
     get_full_screen_dimensions(top, bottom, left, right);
   } else {
     top = bottom = left = right = -1;

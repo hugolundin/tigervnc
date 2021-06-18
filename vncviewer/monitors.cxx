@@ -88,11 +88,6 @@ int coordinates_sort_cb(const void * a, const void * b)
 
 void load_selected_indices(std::set<int>& indices)
 {   
-    // If all monitors are selected, no indices can be parsed. 
-    if (strcmp(fullScreenSelectedMonitors, "all") == 0) {
-        return;
-    }
-
     // Because sscanf modifies the string it parses, we want to 
     // make a copy before using it. 
     const char * config = fullScreenSelectedMonitors.getValueStr();
@@ -121,8 +116,6 @@ void load_monitors(std::vector<Monitor>& monitors)
     std::set<int> indices;
     load_selected_indices(indices);
 
-    bool all_monitors_selected = strcmp(fullScreenSelectedMonitors, "all") == 0;
-
     for (int i = 0; i < Fl::screen_count(); i++) {
         Monitor monitor = {0};
 
@@ -136,7 +129,7 @@ void load_monitors(std::vector<Monitor>& monitors)
         );
 
         monitor.fltk_index = i;
-        monitor.selected = all_monitors_selected ? true : false;
+        monitor.selected = fullScreenAllMonitors ? true : false;
         monitors.push_back(monitor);
     }
 
@@ -175,8 +168,6 @@ void get_full_screen_dimensions(int& top, int& bottom, int& left, int& right)
 {
     std::vector<Monitor> monitors;
     load_selected_monitors(monitors);
-
-    printf("hi!\n");
 
     if (monitors.size() <= 0) {
         top = bottom = left = right = -1;
