@@ -19,6 +19,8 @@
 #ifndef __MONITORS_H__
 #define __MONITORS_H__
 
+#define MONITOR_NAME_MAX_LEN 1024
+
 typedef struct {
     int x;
     int y;
@@ -27,8 +29,10 @@ typedef struct {
     int index;
     bool selected;
     int fltk_index;
+    char name[MONITOR_NAME_MAX_LEN];
 } Monitor;
 
+void load_monitors(std::vector<Monitor>& monitors);
 void get_full_screen_dimensions(int&, int&, int&, int&);
 
 #endif

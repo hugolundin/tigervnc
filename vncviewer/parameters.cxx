@@ -149,6 +149,9 @@ StringParameter display("display",
 			"Specifies the X display on which the VNC viewer window should appear.",
 			"");
 #endif
+BoolParameter listMonitors("listMonitors",
+      "List details about the available system monitors",
+      false);
 
 StringParameter menuKey("MenuKey", "The key which brings up the popup menu",
                         "F8");

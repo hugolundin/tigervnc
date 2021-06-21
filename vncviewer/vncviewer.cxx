@@ -69,6 +69,7 @@
 #include "touch.h"
 #include "vncviewer.h"
 #include "fltk_layout.h"
+#include "monitors.h"
 
 #ifdef WIN32
 #include "resource.h"
@@ -375,14 +376,15 @@ static void usage(const char *programName)
           programName,
 #endif
           programName, programName);
-
-#if !defined(WIN32) && !defined(__APPLE__)
+  
   fprintf(stderr,"\n"
           "Options:\n\n"
+#if !defined(WIN32) && !defined(__APPLE__)
           "  -display Xdisplay  - Specifies the X display for the viewer window\n"
           "  -geometry geometry - Initial position of the main VNC viewer window. See the\n"
-          "                       man page for details.\n");
+          "                       man page for details.\n"
 #endif
+          "  -monitors          - Lists information about the system monitors.\n");
 
   fprintf(stderr,"\n"
           "Parameters can be turned on with -<param> or off with -<param>=0\n"
@@ -393,6 +395,44 @@ static void usage(const char *programName)
           "Parameter names are case-insensitive.  The parameters are:\n\n");
   Configuration::listParams(79, 14);
 
+#ifdef WIN32
+  // Just wait for the user to kill the console window
+  Sleep(INFINITE);
+#endif
+
+  exit(1);
+}
+
+static void
+listMonitorDetails()
+{
+#ifdef WIN32
+  // If we don't have a console then we need to create one for output
+  if (GetConsoleWindow() == NULL) {
+    HANDLE handle;
+    int fd;
+
+    AllocConsole();
+
+    handle = GetStdHandle(STD_ERROR_HANDLE);
+    fd = _open_osfhandle((intptr_t)handle, O_TEXT);
+    *stderr = *fdopen(fd, "w");
+  }
+#endif
+
+  std::vector<Monitor> monitors;
+  load_monitors(monitors);
+
+  // TODO: Describe how to find a monitor index. 
+  fprintf(stderr, "\n"
+          "Monitors are counted from left to right, and in case of a conflict; from top to bottom:\n\n");
+
+  for (std::vector<Monitor>::iterator monitor = monitors.begin(); monitor != monitors.end(); monitor++) {
+    fprintf(stderr, "    %d: %s %dx%d+%d+%d\n",
+      monitor->index, monitor->name, monitor->w, monitor->h, monitor->x, monitor->y);
+  }
+
+  fprintf(stderr, "\n");
 #ifdef WIN32
   // Just wait for the user to kill the console window
   Sleep(INFINITE);
@@ -597,6 +637,10 @@ int main(int argc, char** argv)
     strncpy(vncServerName, argv[i], VNCSERVERNAMELEN);
     vncServerName[VNCSERVERNAMELEN - 1] = '\0';
     i++;
+  }
+
+  if (listMonitors) {
+    listMonitorDetails();
   }
 
 #if !defined(WIN32) && !defined(__APPLE__)

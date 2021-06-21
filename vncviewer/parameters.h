@@ -68,6 +68,7 @@ extern rfb::BoolParameter sendClipboard;
 extern rfb::BoolParameter sendPrimary;
 extern rfb::StringParameter display;
 #endif
+extern rfb::BoolParameter listMonitors;
 
 extern rfb::StringParameter menuKey;
 

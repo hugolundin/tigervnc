@@ -20,6 +20,13 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_XRANDR
+#include <X11/extensions/Xrandr.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#endif
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -30,6 +37,7 @@
 #include "parameters.h"
 
 #include <FL/Fl.H>
+#include <FL/x.H>
 
 #define SELECTED_MONITORS_MAX_LEN 31
 #define SELECTED_MONITORS_ALL_STR "all"
@@ -111,6 +119,8 @@ void load_selected_indices(std::set<int>& indices)
     }
 }
 
+
+
 void load_monitors(std::vector<Monitor>& monitors)
 {
     std::set<int> indices;
@@ -145,6 +155,57 @@ void load_monitors(std::vector<Monitor>& monitors)
         if (indices.find(monitors[i].index) != indices.end()) {
             monitors[i].selected = true;
         }
+
+        #if !defined(WIN32) && !defined(__APPLE__)
+            #ifdef HAVE_XRANDR
+                int ev, err, xi_major;
+                fl_open_display();
+                assert(fl_display != NULL);
+
+                if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
+                    // TODO: Log a message.
+                    return;
+                }
+               
+                XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
+                if (!res) {
+                    // TODO: Log a message.
+                    return;
+                }
+
+                for (int j = 0; j < res->ncrtc; j++) {
+                    XRRCrtcInfo *crtc = XRRGetCrtcInfo(fl_display, res, res->crtcs[j]);
+                    if (!crtc) {
+                        // TODO: Log a message.
+                        continue;
+                    }
+
+                    for (int k = 0; k < crtc->noutput; k++) {
+                        bool monitor_found = (crtc->x == monitors[i].x) &&
+                            (crtc->y == monitors[i].y) &&
+                            (crtc->width == ((unsigned int) monitors[i].w)) &&
+                            (crtc->height == ((unsigned int) monitors[i].h));
+
+                        if (monitor_found) {
+                            XRROutputInfo *output = XRRGetOutputInfo(fl_display, res, crtc->outputs[k]);
+                            if (!output) {
+                                // TODO: Log a message. 
+                                continue;
+                            }
+
+                            strncpy(monitors[i].name, output->name, MONITOR_NAME_MAX_LEN);
+                            XRRFreeOutputInfo(output);
+                        }
+                    }
+
+                    XRRFreeCrtcInfo(crtc);
+                }
+            #endif
+        #elif defined(WIN32)
+            // TODO: Get name from WIN32 APIs. 
+        #elif defined(__APPLE__)
+            // TODO: Get name from Apple APIs. 
+        #endif
     }
 }
 
