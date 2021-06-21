@@ -856,10 +856,10 @@ void DesktopWindow::fullscreen_on()
 {
   int top, bottom, left, right;
 
-  bool multiple_monitors =
-    (strcmp(fullScreenSelectedMonitors, "") != 0) || fullScreenAllMonitors;
+  bool selected_monitors_enabled = fullScreenSelectedMonitorsEnabled &&
+    strcmp(fullScreenSelectedMonitors, "") != 0;
 
-  if (multiple_monitors) {
+  if (fullScreenAllMonitors || selected_monitors_enabled) {
     get_full_screen_dimensions(top, bottom, left, right);
   } else {
     top = bottom = left = right = -1;
