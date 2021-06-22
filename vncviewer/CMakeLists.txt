@@ -17,6 +17,8 @@ set(VNCVIEWER_SOURCES
   parameters.cxx
   keysym2ucs.c
   touch.cxx
+  Monitors.cxx
+  MonitorArrangementWidget.cxx
   vncviewer.cxx)
 
 if(WIN32)
@@ -52,6 +54,13 @@ else()
 endif()
 
 target_link_libraries(vncviewer rfb network rdr os ${FLTK_LIBRARIES} ${GETTEXT_LIBRARIES})
+
+if(X11_FOUND AND X11_Xrandr_LIB)
+  add_definitions(-DHAVE_XRANDR)
+  target_link_libraries(vncviewer ${X11_Xrandr_LIB})
+else()
+  message(WARNING "No Xrandr extension.  vncviewer will not be able to identify monitors.")
+endif()
 
 if(WIN32)
   target_link_libraries(vncviewer msimg32)

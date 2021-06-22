@@ -37,6 +37,7 @@
 #include "CConn.h"
 #include "Surface.h"
 #include "Viewport.h"
+#include "Monitors.h"
 #include "touch.h"
 
 #include <FL/Fl.H>
@@ -853,47 +854,17 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
 
 void DesktopWindow::fullscreen_on()
 {
-  if (not fullScreenAllMonitors)
-    fullscreen_screens(-1, -1, -1, -1);
-  else {
-    int top, bottom, left, right;
-    int top_y, bottom_y, left_x, right_x;
+  // TODO: Why wrong screen?
+  fullscreen_screens(
+    Monitors::shared().top(),
+    Monitors::shared().bottom(),
+    Monitors::shared().left(),
+    Monitors::shared().right()
+  );
 
-    int sx, sy, sw, sh;
-
-    top = bottom = left = right = 0;
-
-    Fl::screen_xywh(sx, sy, sw, sh, 0);
-    top_y = sy;
-    bottom_y = sy + sh;
-    left_x = sx;
-    right_x = sx + sw;
-
-    for (int i = 1;i < Fl::screen_count();i++) {
-      Fl::screen_xywh(sx, sy, sw, sh, i);
-      if (sy < top_y) {
-        top = i;
-        top_y = sy;
-      }
-      if ((sy + sh) > bottom_y) {
-        bottom = i;
-        bottom_y = sy + sh;
-      }
-      if (sx < left_x) {
-        left = i;
-        left_x = sx;
-      }
-      if ((sx + sw) > right_x) {
-        right = i;
-        right_x = sx + sw;
-      }
-    }
-
-    fullscreen_screens(top, bottom, left, right);
-  }
-
-  if (!fullscreen_active())
+  if (!fullscreen_active()) {
     fullscreen();
+  }
 }
 
 #if !defined(WIN32) && !defined(__APPLE__)

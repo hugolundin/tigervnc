@@ -105,6 +105,12 @@ BoolParameter fullScreen("FullScreen", "Full screen mode", false);
 BoolParameter fullScreenAllMonitors("FullScreenAllMonitors",
                                     "Enable full screen over all monitors",
                                     true);
+BoolParameter fullScreenSelectedMonitorsEnabled("FullScreenSelectedMonitorsEnabled",
+                                         "Enable full screen over selected monitors",
+                                         false);
+StringParameter fullScreenSelectedMonitors("FullScreenSelectedMonitors",
+                                         "Enable full screen over the given selected monitors",
+                                         "1,2");
 StringParameter desktopSize("DesktopSize",
                             "Reconfigure desktop size on the server on "
                             "connect (if possible)", "");
@@ -176,6 +182,8 @@ static VoidParameter* parameterArray[] = {
   &qualityLevel,
   &fullScreen,
   &fullScreenAllMonitors,
+  &fullScreenSelectedMonitorsEnabled,
+  &fullScreenSelectedMonitors,
   &desktopSize,
   &remoteResize,
   &viewOnly,

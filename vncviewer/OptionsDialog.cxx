@@ -46,6 +46,7 @@
 #include <FL/Fl_Round_Button.H>
 #include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Choice.H>
+#include <FL/Fl_Check_Browser.H>
 
 using namespace std;
 using namespace rdr;
@@ -298,8 +299,10 @@ void OptionsDialog::loadOptions(void)
   remoteResizeCheckbox->value(remoteResize);
   fullScreenCheckbox->value(fullScreen);
   fullScreenAllMonitorsCheckbox->value(fullScreenAllMonitors);
+  fullScreenSelectedMonitorsCheckbox->value(fullScreenSelectedMonitorsEnabled);
 
   handleDesktopSize(desktopSizeCheckbox, this);
+  handleFullScreenSelectedMonitors(fullScreenSelectedMonitorsCheckbox, this);
 
   /* Misc. */
   sharedCheckbox->value(shared);
@@ -408,6 +411,7 @@ void OptionsDialog::storeOptions(void)
   remoteResize.setParam(remoteResizeCheckbox->value());
   fullScreen.setParam(fullScreenCheckbox->value());
   fullScreenAllMonitors.setParam(fullScreenAllMonitorsCheckbox->value());
+  fullScreenSelectedMonitorsEnabled.setParam(fullScreenSelectedMonitorsCheckbox->value());
 
   /* Misc. */
   shared.setParam(sharedCheckbox->value());
@@ -417,6 +421,8 @@ void OptionsDialog::storeOptions(void)
 
   for (iter = callbacks.begin();iter != callbacks.end();++iter)
     iter->first(iter->second);
+
+  Monitors::shared().refresh();
 }
 
 
@@ -792,6 +798,36 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
                                                       _("Enable full-screen mode over all monitors")));
   ty += CHECK_HEIGHT + TIGHT_MARGIN;
 
+  fullScreenSelectedMonitorsCheckbox = new Fl_Check_Button(LBLRIGHT(tx + INDENT, ty,
+                                                      CHECK_MIN_WIDTH,
+                                                      CHECK_HEIGHT,
+                                                      _("Enable full-screen mode over selected monitors")));
+  ty += CHECK_HEIGHT + TIGHT_MARGIN;
+  fullScreenSelectedMonitorsCheckbox->callback(handleFullScreenSelectedMonitors, this);
+  selectedMonitorsGroup = new Fl_Group(tx+INDENT, ty, 350, 300);
+  monitorArrangementGroup = new Fl_Group(tx+INDENT, ty, 350, 100);
+  monitorArrangementGroup->box(FL_ENGRAVED_BOX);
+  monitorArrangementGroup->color(FL_WHITE);
+  monitorArrangementGroup->align(FL_ALIGN_BOTTOM | FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
+  monitorArrangementGroup->labelcolor(fl_rgb_color(173, 87, 100));
+  //monitorArrangementGroup->labelfont(FL_BOLD);
+
+  monitorArrangementWidget = new MonitorArrangementWidget(tx + INDENT + 100, ty+25, 150, 50);
+  Monitors::shared().add_callback(handleMonitorArrangementUpdate, this);
+  monitorArrangementGroup->end();
+
+  selectedMonitorsBrowser = new Fl_Check_Browser(tx+INDENT, ty+110, 350, 60);
+
+  for (int i = 0; i < Monitors::shared().count(); i++) {
+    selectedMonitorsBrowser->add(Monitors::shared().description(i));
+  }
+
+  selectedMonitorsBrowser->callback(handleMonitorSelected, this);
+  selectedMonitorsBrowser->when(FL_WHEN_CHANGED);
+
+  selectedMonitorsGroup->end();
+
+  ty += CHECK_HEIGHT + 150;
   group->end();
 }
 
@@ -900,6 +936,56 @@ void OptionsDialog::handleClipboard(Fl_Widget *widget, void *data)
   else
     dialog->sendPrimaryCheckbox->deactivate();
 #endif
+}
+
+void OptionsDialog::handleFullScreenSelectedMonitors(Fl_Widget *widget, void *data)
+{
+  OptionsDialog *dialog = (OptionsDialog*)data;
+
+  if (dialog->fullScreenSelectedMonitorsCheckbox->value()) {
+    dialog->selectedMonitorsGroup->activate();
+  } else {
+    dialog->selectedMonitorsGroup->deactivate();
+  }
+
+  Monitors::shared().refresh();
+}
+
+void OptionsDialog::handleMonitorArrangementUpdate(void *data)
+{
+  OptionsDialog *dialog = (OptionsDialog*)data;
+
+  for (int i = 0; i < Monitors::shared().count(); i++) {
+    if (Monitors::shared().is_selected(i)) {
+      dialog->selectedMonitorsBrowser->checked(i+1, true);
+    } else {
+      dialog->selectedMonitorsBrowser->checked(i+1, false);
+    }
+  }
+
+  if (Monitors::shared().has_required()) {
+    dialog->monitorArrangementGroup->copy_label("Required");
+  } else {
+    dialog->monitorArrangementGroup->copy_label("");
+  }
+
+  dialog->monitorArrangementWidget->update();
+}
+
+void OptionsDialog::handleMonitorSelected(Fl_Widget *widget, void *data)
+{
+  OptionsDialog *dialog = (OptionsDialog*)data;
+
+  for (int i = 0; i < Monitors::shared().count(); i++) {
+    if (dialog->selectedMonitorsBrowser->checked(i+1)) {
+      Monitors::shared().set(i, true);
+    } else {
+      Monitors::shared().set(i, false);
+    }
+  }
+
+  dialog->monitorArrangementWidget->update();
+  Monitors::shared().refresh();
 }
 
 void OptionsDialog::handleCancel(Fl_Widget *widget, void *data)

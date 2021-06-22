@@ -1,0 +1,435 @@
+/* Copyright 2021 Hugo Lundin <huglu@cendio.se> for Cendio AB.
+ * 
+ * This is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+ * USA.
+ */
+
+#ifdef HAVE_XRANDR
+#include <X11/extensions/Xrandr.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#endif
+
+#include <assert.h>
+#include <string.h>
+#include <stdio.h>
+#include <string>
+#include <vector>
+#include <set>
+#include <map>
+
+#include <FL/Fl.H>
+#include <FL/x.H>
+
+#include "parameters.h"
+#include "Monitors.h"
+
+std::map<void (*)(void*), void*> Monitors::callbacks;
+
+Monitors::Monitors():
+    m_top(-1), m_bottom(-1), m_left(-1), m_right(-1),
+    m_top_y(-1), m_bottom_y(-1), m_left_x(-1), m_right_x(-1),
+    m_monitors(), m_indices()
+{
+    refresh();
+}
+
+Monitors::~Monitors()
+{
+
+}
+
+Monitors& Monitors::shared()
+{
+    static Monitors m;
+    return m;
+}
+
+void Monitors::add_callback(void (*cb)(void*), void * user_data)
+{
+    callbacks[cb] = user_data;
+}
+
+void Monitors::remove_callback(void (*cb)(void*))
+{
+    callbacks.erase(cb);
+}
+
+void Monitors::refresh()
+{
+    m_indices.clear();
+    m_monitors.clear();
+    
+    load_indices();
+    load_monitors();
+    load_dimensions();
+
+    std::map<void (*)(void*), void*>::const_iterator iter;
+    for (iter = callbacks.begin();iter != callbacks.end();++iter)
+        iter->first(iter->second);
+}
+
+int Monitors::count()
+{
+    return m_monitors.size();
+}
+
+char const * Monitors::description(unsigned int monitor)
+{
+    return m_monitors[monitor].description;
+}
+
+bool Monitors::is_selected(unsigned int monitor)
+{
+    assert(monitor >= 0);
+    assert(monitor < m_monitors.size());
+
+    // All monitors are always selected in this mode. 
+    if (fullScreenAllMonitors) {
+        return true;
+    }
+
+    for (std::set<unsigned int>::iterator index = m_indices.begin();
+         index != m_indices.end();
+         index++)
+    {
+        if (*index == monitor) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Monitors::inside(int x, int y)
+{
+    return (x > m_left_x) && (x < m_right_x) && (y > m_top_y) && (y < m_bottom_y);
+}
+
+bool Monitors::is_required(unsigned monitor)
+{
+    int x, y, w, h;
+    assert(monitor >= 0);
+    assert(monitor < m_monitors.size());
+
+    // Selected monitors are never required. 
+    if (is_selected(monitor)) {
+        return false;
+    }
+
+    dimensions(x, y, w, h, monitor);
+    return inside(x, y) || inside(x+w, y) || inside(x, y+h) || inside(x+w, y+h);
+}
+
+bool Monitors::has_required()
+{
+    for (int i = 0; i < count(); i++) {
+        if (is_required(i)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void Monitors::dimensions(int& x, int& y, int& w, int& h, unsigned int monitor)
+{
+    assert(monitor >= 0);
+    assert(monitor < m_monitors.size());
+
+    x = m_monitors[monitor].x;
+    y = m_monitors[monitor].y;
+    w = m_monitors[monitor].w;
+    h = m_monitors[monitor].h;
+}
+
+void Monitors::set(unsigned int monitor, bool select)
+{
+    if (select) {
+        m_indices.insert(monitor);
+    } else {
+        m_indices.erase(monitor);
+    }
+
+    char buf[1024] = {0};
+    char const * separator = "";
+    int bytes_written = 0;
+
+    for (std::set<unsigned int>::iterator index = m_indices.begin();
+         index != m_indices.end();
+         index++)
+    {
+        bytes_written += snprintf(
+            buf+bytes_written,
+            1024-bytes_written,
+            "%s%u",
+            separator,
+            (*index)+1
+        );
+
+        separator = ",";
+    }
+
+    // Write the new configuration. 
+    fullScreenSelectedMonitors.setParam(buf);
+}
+
+void Monitors::toggle(unsigned int monitor)
+{
+    set(monitor, m_indices.find(monitor) == m_indices.end());
+    refresh();
+}
+
+int Monitors::top()
+{
+    return fullscreen_multiple_monitors_enabled() ? m_top : -1;
+}
+
+int Monitors::bottom()
+{
+    return fullscreen_multiple_monitors_enabled() ? m_bottom : -1;
+}
+
+int Monitors::left()
+{
+    return fullscreen_multiple_monitors_enabled() ? m_left : -1;
+}
+
+int Monitors::right()
+{
+    return fullscreen_multiple_monitors_enabled() ? m_right : -1;
+}
+
+void Monitors::frame_buffer_dimensions(int& x, int& y, int& w, int& h)
+{
+    if (fullscreen_multiple_monitors_enabled()) {
+        x = m_left_x;
+        y = m_top_y;
+        w = m_right_x - m_left_x;
+        h = m_bottom_y - m_top_y;
+    } else {
+        x = y = w = h = 0;
+    }
+}
+
+void Monitors::load_monitors()
+{
+    // Start by creating a struct for every monitor.
+    for (int i = 0; i < Fl::screen_count(); i++) {
+        Monitor monitor = {0};
+
+        // Get the properties of the monitor at the current index;
+        Fl::screen_xywh(
+            monitor.x,
+            monitor.y,
+            monitor.w,
+            monitor.h,
+            i
+        );
+
+        monitor.fltk_index = i;
+        m_monitors.push_back(monitor);
+    }
+
+    // Sort the monitors according to the specification in the vncviewer manual. 
+    qsort(&m_monitors[0], m_monitors.size(), sizeof(*(&m_monitors[0])), sort_cb);
+
+    #if !defined(WIN32) && !defined(__APPLE__)
+    #ifdef HAVE_XRANDR
+
+    int ev, err, xi_major;
+    fl_open_display();
+    assert(fl_display != NULL);
+
+    if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
+        // TODO: Log a message.
+        return;
+    }
+
+    XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
+    if (!res) {
+        // TODO: Log a message.
+        return;
+    }
+
+    for (int i = 0; i < count(); i++) {
+        for (int j = 0; j < res->ncrtc; j++) {
+            XRRCrtcInfo *crtc = XRRGetCrtcInfo(fl_display, res, res->crtcs[j]);
+            if (!crtc) {
+                // TODO: Log a message.
+                continue;
+            }
+
+            for (int k = 0; k < crtc->noutput; k++) {
+                bool monitor_found = (crtc->x == m_monitors[i].x) &&
+                    (crtc->y == m_monitors[i].y) &&
+                    (crtc->width == ((unsigned int) m_monitors[i].w)) &&
+                    (crtc->height == ((unsigned int) m_monitors[i].h));
+
+                if (monitor_found) {
+                    XRROutputInfo *output = XRRGetOutputInfo(fl_display, res, crtc->outputs[k]);
+                    if (!output) {
+                        // TODO: Log a message. 
+                        continue;
+                    }
+
+                    snprintf(
+                        m_monitors[i].description,
+                        DESCRIPTION_MAX_LEN,
+                        "%s (%dx%d+%d+%d)",
+                        output->name,
+                        m_monitors[i].w,
+                        m_monitors[i].h,
+                        m_monitors[i].x,
+                        m_monitors[i].y
+                    );
+                    XRRFreeOutputInfo(output);
+                }
+            }
+
+            XRRFreeCrtcInfo(crtc);
+        }
+    }
+    #endif
+    #elif defined(WIN32)
+    // TODO: Get name from WIN32 APIs. 
+    #elif defined(__APPLE__)
+    // TODO: Get name from Apple APIs. 
+    #endif
+}
+
+void Monitors::load_indices()
+{
+    // Because sscanf modifies the string it parses, we want to 
+    // make a copy before using it. 
+    const char * config = fullScreenSelectedMonitors.getValueStr();
+
+    int value = 0;
+    int count = 0;
+
+    while (*config) {
+        if (1 == sscanf(config, "%d%n", &value, &count)) {
+            m_indices.insert(value-1);
+        }
+
+        config += count;
+
+        // Scan until we find a new number.
+        for (; *config; config++) {
+            if (*config >= '0' && *config <= '9') {
+                break;
+            }
+        }
+    }
+}
+
+void Monitors::load_dimensions()
+{
+    std::vector<Monitor> selected;
+
+    // Filter out the monitors which has been explicitly selected.
+    for (std::vector<Monitor>::size_type monitor = 0;
+         monitor < m_monitors.size();
+         monitor++)
+    {
+        if (is_selected(monitor)) {
+            selected.push_back(m_monitors[monitor]);
+        }
+    }
+
+    // No monitors have been selected. 
+    if (selected.size() == 0) {
+        return;
+    }
+
+    // Calculate the dimensions and which fltk indices that
+    // limits the frame buffer.
+    std::vector<Monitor>::iterator monitor = selected.begin();
+    
+    // Initially we limit the area to the first selected monitor.
+    m_top = m_bottom = m_left = m_right = monitor->fltk_index;
+    m_top_y = monitor->y;
+    m_bottom_y = monitor->y + monitor->h;
+    m_left_x = monitor->x;
+    m_right_x = monitor->x + monitor->w;
+
+    // Exhaust the iterator.
+    for (; monitor != selected.end(); monitor++) {
+        if (monitor->y < m_top_y) {
+            m_top = monitor->fltk_index;
+            m_top_y = monitor->y;
+        }
+
+        if ((monitor->y + monitor->h) > m_bottom_y) {
+            m_bottom = monitor->fltk_index;
+            m_bottom_y = monitor->y + monitor->h;
+        }
+
+        if (monitor->x < m_left_x) {
+            m_left = monitor->fltk_index;
+            m_left_x = monitor->x;
+        }
+
+        if ((monitor->x + monitor->w) > m_right_x) {
+            m_right = monitor->fltk_index;
+            m_right_x = monitor->x + monitor->w;
+        }
+    }
+
+}
+
+int Monitors::sort_cb(const void *a, const void *b)
+{
+    Monitors::Monitor * monitor1 = (Monitors::Monitor *) a;
+    Monitors::Monitor * monitor2 = (Monitors::Monitor *) b;
+
+    if (monitor1->x < monitor2->x) {
+        return -1;
+    }
+
+    if (monitor1->x == monitor2->x) {
+        if (monitor1->y < monitor2->y) {
+            return -1;
+        }
+
+        if (monitor1->y == monitor2->y) {
+            return 0;
+        }
+    }
+
+    return 1;  
+}
+
+void Monitors::debug()
+{
+    printf("--------------------------------------\n");
+
+    for (int i = 0; i < count(); i++) {
+        if (is_selected(i)) {
+            printf("%d is selected\n", i);
+        } else if (is_required(i)) {
+            printf("%d is required\n", i);
+        }
+    }
+}
+
+bool Monitors::fullscreen_multiple_monitors_enabled()
+{
+    bool selected_monitors_enabled = fullScreenSelectedMonitorsEnabled &&
+        strcmp(fullScreenSelectedMonitors, "") != 0;
+ 
+    return fullScreenAllMonitors || selected_monitors_enabled;
+}

@@ -22,6 +22,7 @@
 #include <map>
 
 #include <FL/Fl_Window.H>
+#include "MonitorArrangementWidget.h"
 
 class Fl_Widget;
 class Fl_Group;
@@ -65,6 +66,10 @@ protected:
   static void handleDesktopSize(Fl_Widget *widget, void *data);
 
   static void handleClipboard(Fl_Widget *widget, void *data);
+
+  static void handleFullScreenSelectedMonitors(Fl_Widget *widget, void *data);
+  static void handleMonitorArrangementUpdate(void *data);
+  static void handleMonitorSelected(Fl_Widget *widget, void *data);
 
   static void handleCancel(Fl_Widget *widget, void *data);
   static void handleOK(Fl_Widget *widget, void *data);
@@ -126,6 +131,12 @@ protected:
   Fl_Check_Button *remoteResizeCheckbox;
   Fl_Check_Button *fullScreenCheckbox;
   Fl_Check_Button *fullScreenAllMonitorsCheckbox;
+  Fl_Check_Button *fullScreenSelectedMonitorsCheckbox;
+
+  Fl_Group *selectedMonitorsGroup;
+  Fl_Group *monitorArrangementGroup;
+  MonitorArrangementWidget *monitorArrangementWidget;
+  Fl_Check_Browser *selectedMonitorsBrowser;
 
   /* Misc. */
   Fl_Check_Button *sharedCheckbox;
