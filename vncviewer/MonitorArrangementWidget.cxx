@@ -102,19 +102,19 @@ void MonitorArrangementWidget::draw()
     box->copy_tooltip(Monitors::shared().description(i));
 
     if (Monitors::shared().is_selected(i)) {
-      box->color(fl_rgb_color(192, 222, 189));
-      box->selection_color(fl_rgb_color(192, 222, 189));
+      box->color(fl_rgb_color(53, 132, 228));
+      box->selection_color(fl_rgb_color(53, 132, 228));
     } else if (Monitors::shared().is_required(i)) {
-      box->color(fl_rgb_color(173, 87, 100));
-      box->selection_color(fl_rgb_color(173, 87, 100));
+      box->color(fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228))));
+      box->selection_color(fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228))));
     } else {
-      box->color(FL_WHITE);
-      box->selection_color(FL_WHITE);
+      box->color(fl_lighter(FL_BACKGROUND_COLOR));
+      box->selection_color(fl_lighter(FL_BACKGROUND_COLOR));
     }
   }
     
   if (!Monitors::shared().has_required()) {
-    frame_buffer->hide();
+    frame_buffer->show();
   } else {
     frame_buffer->hide();
   }

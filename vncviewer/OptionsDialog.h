@@ -69,7 +69,6 @@ protected:
 
   static void handleFullScreenSelectedMonitors(Fl_Widget *widget, void *data);
   static void handleMonitorArrangementUpdate(void *data);
-  static void handleMonitorSelected(Fl_Widget *widget, void *data);
 
   static void handleCancel(Fl_Widget *widget, void *data);
   static void handleOK(Fl_Widget *widget, void *data);
@@ -133,10 +132,8 @@ protected:
   Fl_Check_Button *fullScreenAllMonitorsCheckbox;
   Fl_Check_Button *fullScreenSelectedMonitorsCheckbox;
 
-  Fl_Group *selectedMonitorsGroup;
   Fl_Group *monitorArrangementGroup;
   MonitorArrangementWidget *monitorArrangementWidget;
-  Fl_Check_Browser *selectedMonitorsBrowser;
 
   /* Misc. */
   Fl_Check_Button *sharedCheckbox;

@@ -185,6 +185,7 @@ void Monitors::set(unsigned int monitor, bool select)
 
     // Write the new configuration. 
     fullScreenSelectedMonitors.setParam(buf);
+    refresh();
 }
 
 void Monitors::toggle(unsigned int monitor)
