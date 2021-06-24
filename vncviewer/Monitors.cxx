@@ -37,14 +37,14 @@
 #include "parameters.h"
 #include "Monitors.h"
 
-std::map<void (*)(void*), void*> Monitors::callbacks;
-
 Monitors::Monitors():
     m_top(-1), m_bottom(-1), m_left(-1), m_right(-1),
     m_top_y(-1), m_bottom_y(-1), m_left_x(-1), m_right_x(-1),
     m_monitors(), m_indices()
 {
-    refresh();
+    load_monitors();
+    load_indices();
+    calculate_dimensions();
 }
 
 Monitors::~Monitors()
@@ -54,116 +54,23 @@ Monitors::~Monitors()
 
 Monitors& Monitors::shared()
 {
-    static Monitors m;
-    return m;
+    static Monitors monitors;
+    return monitors;
 }
 
-void Monitors::add_callback(void (*cb)(void*), void * user_data)
-{
-    callbacks[cb] = user_data;
-}
-
-void Monitors::remove_callback(void (*cb)(void*))
-{
-    callbacks.erase(cb);
-}
-
-void Monitors::refresh()
-{
-    m_indices.clear();
-    m_monitors.clear();
-    
-    load_indices();
-    load_monitors();
-    load_dimensions();
-
-    std::map<void (*)(void*), void*>::const_iterator iter;
-    for (iter = callbacks.begin();iter != callbacks.end();++iter)
-        iter->first(iter->second);
-}
-
-int Monitors::count()
+int Monitors::count() const
 {
     return m_monitors.size();
 }
 
-char const * Monitors::description(unsigned int monitor)
+void Monitors::refresh()
 {
-    return m_monitors[monitor].description;
+    load_monitors();
+    calculate_dimensions();
 }
 
-bool Monitors::is_selected(unsigned int monitor)
+void Monitors::save()
 {
-    assert(monitor >= 0);
-    assert(monitor < m_monitors.size());
-
-    // All monitors are always selected in this mode. 
-    if (fullScreenAllMonitors) {
-        return true;
-    }
-
-    for (std::set<unsigned int>::iterator index = m_indices.begin();
-         index != m_indices.end();
-         index++)
-    {
-        if (*index == monitor) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool Monitors::inside(int x, int y)
-{
-    return (x > m_left_x) && (x < m_right_x) && (y > m_top_y) && (y < m_bottom_y);
-}
-
-bool Monitors::is_required(unsigned monitor)
-{
-    int x, y, w, h;
-    assert(monitor >= 0);
-    assert(monitor < m_monitors.size());
-
-    // Selected monitors are never required. 
-    if (is_selected(monitor)) {
-        return false;
-    }
-
-    dimensions(x, y, w, h, monitor);
-    return inside(x, y) || inside(x+w, y) || inside(x, y+h) || inside(x+w, y+h);
-}
-
-bool Monitors::has_required()
-{
-    for (int i = 0; i < count(); i++) {
-        if (is_required(i)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void Monitors::dimensions(int& x, int& y, int& w, int& h, unsigned int monitor)
-{
-    assert(monitor >= 0);
-    assert(monitor < m_monitors.size());
-
-    x = m_monitors[monitor].x;
-    y = m_monitors[monitor].y;
-    w = m_monitors[monitor].w;
-    h = m_monitors[monitor].h;
-}
-
-void Monitors::set(unsigned int monitor, bool select)
-{
-    if (select) {
-        m_indices.insert(monitor);
-    } else {
-        m_indices.erase(monitor);
-    }
-
     char buf[1024] = {0};
     char const * separator = "";
     int bytes_written = 0;
@@ -185,38 +92,22 @@ void Monitors::set(unsigned int monitor, bool select)
 
     // Write the new configuration. 
     fullScreenSelectedMonitors.setParam(buf);
-    refresh();
 }
 
-void Monitors::toggle(unsigned int monitor)
+bool Monitors::has_required() const
 {
-    set(monitor, m_indices.find(monitor) == m_indices.end());
-    refresh();
+    for (int i = 0; i < count(); i++) {
+        if (is_required(i)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
-int Monitors::top()
+void Monitors::dimensions(int& x, int& y, int& w, int& h) const
 {
-    return fullscreen_multiple_monitors_enabled() ? m_top : -1;
-}
-
-int Monitors::bottom()
-{
-    return fullscreen_multiple_monitors_enabled() ? m_bottom : -1;
-}
-
-int Monitors::left()
-{
-    return fullscreen_multiple_monitors_enabled() ? m_left : -1;
-}
-
-int Monitors::right()
-{
-    return fullscreen_multiple_monitors_enabled() ? m_right : -1;
-}
-
-void Monitors::frame_buffer_dimensions(int& x, int& y, int& w, int& h)
-{
-    if (fullscreen_multiple_monitors_enabled()) {
+    if (multiple_monitors()) {
         x = m_left_x;
         y = m_top_y;
         w = m_right_x - m_left_x;
@@ -224,6 +115,125 @@ void Monitors::frame_buffer_dimensions(int& x, int& y, int& w, int& h)
     } else {
         x = y = w = h = 0;
     }
+}
+
+void Monitors::toggle(unsigned int monitor)
+{
+    set(monitor, m_indices.find(monitor) == m_indices.end());
+}
+
+void Monitors::set(unsigned int monitor, bool select)
+{
+    if (select) {
+        m_indices.insert(monitor);
+    } else {
+        m_indices.erase(monitor);
+    }
+
+    calculate_dimensions();
+}
+
+bool Monitors::is_selected(unsigned int monitor) const
+{
+    assert(monitor >= 0);
+    assert(monitor < m_monitors.size());
+
+    // All monitors are always selected in this mode. 
+    if (fullScreenAllMonitors) {
+        return true;
+    }
+
+    for (std::set<unsigned int>::iterator index = m_indices.begin();
+         index != m_indices.end();
+         index++)
+    {
+        if (*index == monitor) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Monitors::is_required(unsigned monitor) const
+{
+    int x, y, w, h;
+    assert(monitor >= 0);
+    assert(monitor < m_monitors.size());
+
+    // Selected monitors are never required. 
+    if (is_selected(monitor)) {
+        return false;
+    }
+
+    dimensions(x, y, w, h, monitor);
+    return inside(x, y) || inside(x+w, y) || inside(x, y+h) || inside(x+w, y+h);
+}
+
+char const * Monitors::description(unsigned int monitor) const
+{
+    return m_monitors[monitor].description;
+}
+
+void Monitors::dimensions(int& x, int& y, int& w, int& h, unsigned int monitor) const
+{
+    assert(monitor >= 0);
+    assert(monitor < m_monitors.size());
+
+    x = m_monitors[monitor].x;
+    y = m_monitors[monitor].y;
+    w = m_monitors[monitor].w;
+    h = m_monitors[monitor].h;
+}
+
+int Monitors::top() const
+{
+    return multiple_monitors() ? m_top : -1;
+}
+
+int Monitors::left() const
+{
+    return multiple_monitors() ? m_left : -1;
+}
+
+int Monitors::right() const
+{
+    return multiple_monitors() ? m_right : -1;
+}
+
+int Monitors::bottom() const
+{
+    return multiple_monitors() ? m_bottom : -1;
+}
+
+int Monitors::width() const
+{
+    int w = 0;
+    int result = 0;
+
+    for (int i = 0; i < count(); i++) {
+        w = m_monitors[i].w + m_monitors[i].x;
+        if (w > result) {
+            result = w;
+        }
+    }
+
+    return result;
+}
+
+int Monitors::height() const
+{
+    int h = 0;
+    int result = 0;
+
+    for (int i = 0; i < count(); i++) {
+        h = m_monitors[i].h + m_monitors[i].y;
+        if (h > result) {
+            result = h;
+        }
+    }
+
+    return result;
 }
 
 void Monitors::load_monitors()
@@ -314,12 +324,12 @@ void Monitors::load_monitors()
 
 void Monitors::load_indices()
 {
+    int value = 0;
+    int count = 0;
+
     // Because sscanf modifies the string it parses, we want to 
     // make a copy before using it. 
     const char * config = fullScreenSelectedMonitors.getValueStr();
-
-    int value = 0;
-    int count = 0;
 
     while (*config) {
         if (1 == sscanf(config, "%d%n", &value, &count)) {
@@ -337,7 +347,7 @@ void Monitors::load_indices()
     }
 }
 
-void Monitors::load_dimensions()
+void Monitors::calculate_dimensions()
 {
     std::vector<Monitor> selected;
 
@@ -392,6 +402,19 @@ void Monitors::load_dimensions()
 
 }
 
+bool Monitors::inside(int x, int y) const
+{
+    return (x > m_left_x) && (x < m_right_x) && (y > m_top_y) && (y < m_bottom_y);
+}
+
+bool Monitors::multiple_monitors() const
+{
+    bool selected_monitors_enabled = fullScreenSelectedMonitorsEnabled &&
+        strcmp(fullScreenSelectedMonitors, "") != 0;
+ 
+    return fullScreenAllMonitors || selected_monitors_enabled;
+}
+
 int Monitors::sort_cb(const void *a, const void *b)
 {
     Monitors::Monitor * monitor1 = (Monitors::Monitor *) a;
@@ -412,25 +435,4 @@ int Monitors::sort_cb(const void *a, const void *b)
     }
 
     return 1;  
-}
-
-void Monitors::debug()
-{
-    printf("--------------------------------------\n");
-
-    for (int i = 0; i < count(); i++) {
-        if (is_selected(i)) {
-            printf("%d is selected\n", i);
-        } else if (is_required(i)) {
-            printf("%d is required\n", i);
-        }
-    }
-}
-
-bool Monitors::fullscreen_multiple_monitors_enabled()
-{
-    bool selected_monitors_enabled = fullScreenSelectedMonitorsEnabled &&
-        strcmp(fullScreenSelectedMonitors, "") != 0;
- 
-    return fullScreenAllMonitors || selected_monitors_enabled;
 }

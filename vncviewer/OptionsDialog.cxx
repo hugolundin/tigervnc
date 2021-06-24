@@ -38,6 +38,7 @@
 #include "i18n.h"
 #include "menukey.h"
 #include "parameters.h"
+#include "Monitors.h"
 
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Button.H>
@@ -412,6 +413,7 @@ void OptionsDialog::storeOptions(void)
   fullScreen.setParam(fullScreenCheckbox->value());
   fullScreenAllMonitors.setParam(fullScreenAllMonitorsCheckbox->value());
   fullScreenSelectedMonitorsEnabled.setParam(fullScreenSelectedMonitorsCheckbox->value());
+  Monitors::shared().save();
 
   /* Misc. */
   shared.setParam(sharedCheckbox->value());
@@ -421,8 +423,6 @@ void OptionsDialog::storeOptions(void)
 
   for (iter = callbacks.begin();iter != callbacks.end();++iter)
     iter->first(iter->second);
-
-  Monitors::shared().refresh();
 }
 
 
@@ -821,8 +821,7 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
   monitorArrangementGroup->align(FL_ALIGN_BOTTOM | FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
   monitorArrangementGroup->labelcolor(fl_rgb_color(173, 87, 100));
 
-  monitorArrangementWidget = new MonitorArrangementWidget(tx + INDENT + 100, ty+25, 200, 100);
-  Monitors::shared().add_callback(handleMonitorArrangementUpdate, this);
+  monitorArrangement = new MonitorArrangement(tx + INDENT + 100, ty+25, 200, 100, Monitors::shared());
   monitorArrangementGroup->end();
 
   ty += CHECK_HEIGHT + 150;
@@ -945,12 +944,6 @@ void OptionsDialog::handleFullScreenSelectedMonitors(Fl_Widget *widget, void *da
   } else {
     dialog->monitorArrangementGroup->deactivate();
   }
-}
-
-void OptionsDialog::handleMonitorArrangementUpdate(void *data)
-{
-  OptionsDialog *dialog = (OptionsDialog*)data;
-  dialog->monitorArrangementWidget->update();
 }
 
 void OptionsDialog::handleCancel(Fl_Widget *widget, void *data)

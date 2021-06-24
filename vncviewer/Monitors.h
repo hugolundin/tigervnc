@@ -19,6 +19,8 @@
 #ifndef __MONITORS_H__
 #define __MONITORS_H__
 
+#include "MonitorArrangement.h"
+
 #include <vector>
 #include <set>
 #include <list>
@@ -26,36 +28,67 @@
 
 #define DESCRIPTION_MAX_LEN 256
 
-class Monitors {
+class Monitors: public MonitorArrangementDelegate {
 public:
   Monitors();
   ~Monitors();
+
+  /// Singleton for current monitors.
   static Monitors& shared();
 
-  void refresh();
-  int count();
-  bool is_selected(unsigned int);
-  bool is_required(unsigned int);
-  void dimensions(int&, int&, int&, int&, unsigned int);
-  char const * description(unsigned int);
-  bool has_required();
+  /// Get the current monitor count. 
+  int count() const;
 
+  /// Refresh the current state without loading
+  /// the configuration from disk. 
+  void refresh();
+
+  /// Store the current configuration to disk. 
+  void save();
+
+  /// Returns true if the configuration has monitors
+  /// that are required to be part of it to create a 
+  /// rectangular frame buffer. 
+  bool has_required() const;
+
+  /// Return the dimensions of the selection frame buffer.
+  void dimensions(int&, int&, int&, int&) const;
+
+  /// Toggle the state for the given monitor. 
   void toggle(unsigned int);
+
+  /// Set the state for the given monitor. 
   void set(unsigned int, bool);
 
-  int top();
-  int left();
-  int right();
-  int bottom();
+  /// Return true if the given monitor is selected. 
+  bool is_selected(unsigned int) const;
 
-  static void add_callback(void (*)(void*), void *);
-  static void remove_callback(void (*)(void *));
-  void frame_buffer_dimensions(int&, int&, int&, int&);
-  void debug();
-  bool fullscreen_multiple_monitors_enabled();
+  /// Return true if the given monitor is required. 
+  bool is_required(unsigned int) const;
 
-protected:
-  static std::map<void (*)(void*), void*> callbacks;
+  /// Return the description for the given monitor. 
+  char const * description(unsigned int) const;
+
+  /// Return the dimensions for the given monitor.
+  void dimensions(int&, int&, int&, int&, unsigned int) const;
+
+  /// Return the FLTK of the monitor limiting the top of the frame buffer. 
+  int top() const;
+
+  /// Return the FLTK of the monitor limiting the left of the frame buffer. 
+  int left() const;
+
+  /// Return the FLTK of the monitor limiting the right of the frame buffer. 
+  int right() const;
+
+  /// Return the FLTK of the monitor limiting the bottom of the frame buffer. 
+  int bottom() const;
+
+  /// Return the width of the monitor configuration.
+  int width() const;
+
+  /// Return the height of the monitor configuration.
+  int height() const;
 
 private:
   typedef struct {
@@ -76,12 +109,25 @@ private:
 
   std::vector<Monitor> m_monitors;
   std::set<unsigned int> m_indices;
-
-  void load_indices();
+  
+  /// Load the monitors available on the system. 
   void load_monitors();
-  void load_dimensions();
 
-  bool inside(int x, int y);
+  /// Load the current configuration from disk. 
+  void load_indices();
+
+  /// Calculate the dimensions for fullscreen mode.
+  void calculate_dimensions();
+  
+  /// Return true if the given coordinates are inside 
+  /// the frame buffer for the selected monitors.
+  bool inside(int x, int y) const;
+
+  /// Return true if a mode with multiple monitors in 
+  /// fullscreen is currently being used.
+  bool multiple_monitors() const;
+
+  /// Callback for sorting monitors.
   static int sort_cb(const void*, const void*);
 };
 

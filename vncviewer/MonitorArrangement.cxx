@@ -1,0 +1,151 @@
+/* Copyright 2021 Hugo Lundin <huglu@cendio.se> for Cendio AB.
+ * 
+ * This is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this software; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
+ * USA.
+ */
+
+#include <vector>
+
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Check_Button.H>
+#include <FL/Fl_Timer.H>
+#include <FL/Fl_Group.H>
+#include <FL/fl_draw.H>
+#include <FL/Fl_PNG_Image.H>
+#include <FL/Fl_Check_Browser.H>
+
+#include "MonitorArrangement.h"
+
+#define MONITOR_AVAILABLE_COLOR fl_lighter(FL_BACKGROUND_COLOR)
+#define MONITOR_SELECTED_COLOR fl_rgb_color(53, 132, 228)
+#define MONITOR_REQUIRED_COLOR fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228)))
+
+typedef struct {
+    unsigned int index;
+    MonitorArrangement *destination;
+} CallbackData;
+
+MonitorArrangement::MonitorArrangement(
+    int x, int y, int w, int h, MonitorArrangementDelegate &delegate
+): Fl_Group(x, y, w, h), m_delegate(delegate)
+{
+  double s = scale();
+  int x_m, y_m, w_m, h_m;
+
+  for (int i = 0; i < m_delegate.count(); i++) {
+    m_delegate.dimensions(x_m, y_m, w_m, h_m, i);
+
+    Fl_Button *monitor = new Fl_Button(
+      /* x = */ x + x_m*s,
+      /* y = */ y + y_m*s,
+      /* w = */ w_m*s*0.98,
+      /* h = */ h_m*s*0.98
+    );
+
+    CallbackData *data = new CallbackData();
+    data->destination = this;
+    data->index = (unsigned int) i;
+
+    monitor->box(FL_BORDER_BOX);
+    monitor->clear_visible_focus();
+    monitor->copy_tooltip(m_delegate.description(i));
+    monitor->callback(callback, data);
+    monitor->type(FL_TOGGLE_BUTTON);
+    monitor->when(FL_WHEN_CHANGED);
+    monitor->value(m_delegate.is_selected(i) ? 1 : 0);
+    set_color(monitor, i);
+
+    m_monitors.push_back(monitor);
+  }
+
+  end();
+}
+
+MonitorArrangement::~MonitorArrangement()
+{
+
+}
+
+void MonitorArrangement::draw()
+{
+  for (int i = 0; i != m_delegate.count(); i++) {
+    set_color(i);
+  }
+
+  Fl_Group::draw();
+}
+
+void MonitorArrangement::show()
+{
+    Fl_Group::show();
+}
+
+double MonitorArrangement::scale()
+{
+  double s_w = static_cast<double>(this->w()) / static_cast<double>(m_delegate.width());
+  double s_h = static_cast<double>(this->h()) / static_cast<double>(m_delegate.height());
+
+  // Choose the one that scales the least, in order to
+  // maximize our use of the given bounding area.
+  if (s_w > s_h) {
+    return s_h;
+  } else {
+    return s_w;
+  }
+}
+
+int MonitorArrangement::x_offset()
+{
+  return 0;
+}
+
+int MonitorArrangement::y_offset()
+{
+  return 0;
+}
+
+void MonitorArrangement::set_color(int i)
+{
+  set_color(m_monitors[i], i);
+}
+
+void MonitorArrangement::set_color(Fl_Button *monitor, int i)
+{
+  if (m_delegate.is_selected(i)) {
+    monitor->color(MONITOR_SELECTED_COLOR);
+    monitor->selection_color(MONITOR_SELECTED_COLOR);
+  } else if (m_delegate.is_required(i)) {
+    monitor->color(MONITOR_REQUIRED_COLOR);
+    monitor->selection_color(MONITOR_REQUIRED_COLOR);
+  } else {
+    monitor->color(MONITOR_AVAILABLE_COLOR);
+    monitor->selection_color(MONITOR_AVAILABLE_COLOR);
+  }
+}
+
+void MonitorArrangement::notify(int i)
+{
+  m_delegate.set(i, m_monitors[i]->value() == 1);
+  redraw();
+}
+
+void MonitorArrangement::callback(Fl_Widget *, void *data)
+{
+  CallbackData *cbd = (CallbackData *)data;
+  cbd->destination->notify(cbd->index);
+}

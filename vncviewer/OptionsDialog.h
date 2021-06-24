@@ -22,7 +22,7 @@
 #include <map>
 
 #include <FL/Fl_Window.H>
-#include "MonitorArrangementWidget.h"
+#include "MonitorArrangement.h"
 
 class Fl_Widget;
 class Fl_Group;
@@ -133,7 +133,7 @@ protected:
   Fl_Check_Button *fullScreenSelectedMonitorsCheckbox;
 
   Fl_Group *monitorArrangementGroup;
-  MonitorArrangementWidget *monitorArrangementWidget;
+  MonitorArrangement *monitorArrangement;
 
   /* Misc. */
   Fl_Check_Button *sharedCheckbox;

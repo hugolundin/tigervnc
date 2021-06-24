@@ -16,10 +16,8 @@
  * USA.
  */
 
-#ifndef __MONITOR_ARRANGEMENT_WIDGET_H__
-#define __MONITOR_ARRANGEMENT_WIDGET_H__
-
-#include "Monitors.h"
+#ifndef __MONITOR_ARRANGEMENT_H__
+#define __MONITOR_ARRANGEMENT_H__
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -32,24 +30,44 @@
 #include <FL/Fl_PNG_Image.H>
 #include <FL/Fl_Check_Browser.H>
 
-class MonitorArrangementWidget: public Fl_Group {
+#include <vector>
+
+class MonitorArrangementDelegate {
 public:
-  MonitorArrangementWidget(int, int, int, int);
-  ~MonitorArrangementWidget() {};
-  void update();
+  virtual ~MonitorArrangementDelegate(){};
+  virtual int count() const=0;
+  virtual bool is_selected(unsigned int index) const=0;
+  virtual bool is_required(unsigned int index) const=0;
+  virtual void set(unsigned int, bool)=0;
+  virtual void dimensions(int&, int&, int&, int&) const=0;
+  virtual char const * description(unsigned int) const=0;
+  virtual void dimensions(int&, int&, int&, int&, unsigned int) const=0;
+  virtual int width() const=0;
+  virtual int height() const=0;
+};
+
+class MonitorArrangement: public Fl_Group {
+public:
+  MonitorArrangement(
+    int x, int y, int w, int h, MonitorArrangementDelegate &delegate);
+  ~MonitorArrangement();
+  
+protected:
   virtual void draw();
   virtual void show();
-  
-private:
-  Fl_Button * frame_buffer;
-  std::vector<Fl_Button *> m_monitor_widgets;
+
+private:  
+  std::vector<Fl_Button *> m_monitors;
+  MonitorArrangementDelegate &m_delegate;
 
   double scale();
-  int max_width();
-  int max_height();
+  int x_offset();
+  int y_offset();
+  void set_color(int);
+  void set_color(Fl_Button*, int);
 
-  void monitor_cb(Fl_Widget *, unsigned int);
-  static void monitor_cb_adapter(Fl_Widget *, void *);
+  void notify(int);
+  static void callback(Fl_Widget *, void*);
 };
 
 #endif
