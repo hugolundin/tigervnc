@@ -61,8 +61,8 @@ private:
   MonitorArrangementDelegate &m_delegate;
 
   double scale();
-  int x_offset();
-  int y_offset();
+  int offset_x();
+  int offset_y();
   void set_color(int);
   void set_color(Fl_Button*, int);
 

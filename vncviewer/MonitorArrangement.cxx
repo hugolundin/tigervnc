@@ -31,6 +31,8 @@
 
 #include "MonitorArrangement.h"
 
+#define MONITOR_ARRANGEMENT_MARGIN 20
+#define MONITOR_MARGIN_SCALE_FACTOR 0.99
 #define MONITOR_AVAILABLE_COLOR fl_lighter(FL_BACKGROUND_COLOR)
 #define MONITOR_SELECTED_COLOR fl_rgb_color(53, 132, 228)
 #define MONITOR_REQUIRED_COLOR fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228)))
@@ -55,10 +57,10 @@ MonitorArrangement::MonitorArrangement(
     m_delegate.dimensions(x_m, y_m, w_m, h_m, i);
 
     Fl_Button *monitor = new Fl_Button(
-      /* x = */ x + x_m*s,
-      /* y = */ y + y_m*s,
-      /* w = */ w_m*s*0.98,
-      /* h = */ h_m*s*0.98
+      /* x = */ x + offset_x() + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
+      /* y = */ y + offset_y() + y_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*y_m*s,
+      /* w = */ w_m*s*MONITOR_MARGIN_SCALE_FACTOR,
+      /* h = */ h_m*s*MONITOR_MARGIN_SCALE_FACTOR
     );
 
     CallbackData *data = new CallbackData();
@@ -101,8 +103,8 @@ void MonitorArrangement::show()
 
 double MonitorArrangement::scale()
 {
-  double s_w = static_cast<double>(this->w()) / static_cast<double>(m_delegate.width());
-  double s_h = static_cast<double>(this->h()) / static_cast<double>(m_delegate.height());
+  double s_w = static_cast<double>(this->w()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate.width());
+  double s_h = static_cast<double>(this->h()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate.height());
 
   // Choose the one that scales the least, in order to
   // maximize our use of the given bounding area.
@@ -113,14 +115,14 @@ double MonitorArrangement::scale()
   }
 }
 
-int MonitorArrangement::x_offset()
+int MonitorArrangement::offset_x()
 {
-  return 0;
+  return (this->w()/2) - (m_delegate.width()/2 * scale());
 }
 
-int MonitorArrangement::y_offset()
+int MonitorArrangement::offset_y()
 {
-  return 0;
+  return (this->h()/2) - (m_delegate.height()/2 * scale());
 }
 
 void MonitorArrangement::set_color(int i)
