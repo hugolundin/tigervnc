@@ -44,6 +44,10 @@ MonitorArrangement::MonitorArrangement(
     int x, int y, int w, int h, MonitorArrangementDelegate &delegate
 ): Fl_Group(x, y, w, h), m_delegate(delegate)
 {
+
+  box(FL_ENGRAVED_BOX);
+  color(fl_lighter(FL_BACKGROUND_COLOR));
+
   double s = scale();
   int x_m, y_m, w_m, h_m;
 

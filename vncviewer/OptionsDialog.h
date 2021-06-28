@@ -131,8 +131,6 @@ protected:
   Fl_Check_Button *fullScreenCheckbox;
   Fl_Check_Button *fullScreenAllMonitorsCheckbox;
   Fl_Check_Button *fullScreenSelectedMonitorsCheckbox;
-
-  Fl_Group *monitorArrangementGroup;
   MonitorArrangement *monitorArrangement;
 
   /* Misc. */

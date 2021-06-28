@@ -810,19 +810,12 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
   int full_height = th;
   int margin_height = full_height - ty + OUTER_MARGIN * 3;
 
-  monitorArrangementGroup = new Fl_Group(
-                                    tx + 2*INDENT,
-                                    ty,
-                                    margin_width,
-                                    margin_height);
-
-  monitorArrangementGroup->box(FL_ENGRAVED_BOX);
-  monitorArrangementGroup->color(fl_lighter(FL_BACKGROUND_COLOR));
-  monitorArrangementGroup->align(FL_ALIGN_BOTTOM | FL_ALIGN_RIGHT | FL_ALIGN_INSIDE);
-  monitorArrangementGroup->labelcolor(fl_rgb_color(173, 87, 100));
-
-  monitorArrangement = new MonitorArrangement(tx + INDENT + 100, ty+25, 200, 100, Monitors::shared());
-  monitorArrangementGroup->end();
+  monitorArrangement = new MonitorArrangement(
+                            tx + 2*INDENT,
+                            ty,
+                            margin_width,
+                            margin_height,
+                            Monitors::shared());
 
   ty += CHECK_HEIGHT + 150;
   group->end();
@@ -940,9 +933,9 @@ void OptionsDialog::handleFullScreenSelectedMonitors(Fl_Widget *widget, void *da
   OptionsDialog *dialog = (OptionsDialog*)data;
 
   if (dialog->fullScreenSelectedMonitorsCheckbox->value()) {
-    dialog->monitorArrangementGroup->activate();
+    dialog->monitorArrangement->activate();
   } else {
-    dialog->monitorArrangementGroup->deactivate();
+    dialog->monitorArrangement->deactivate();
   }
 }
 
