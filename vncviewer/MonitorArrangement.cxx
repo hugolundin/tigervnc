@@ -17,6 +17,7 @@
  */
 
 #include <vector>
+#include <algorithm>
 
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -37,6 +38,8 @@
 #define MONITOR_SELECTED_COLOR fl_rgb_color(53, 132, 228)
 #define MONITOR_REQUIRED_COLOR fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228)))
 
+#define FL_CHECKERED_BOX (Fl_Boxtype) FL_FREE_BOXTYPE
+
 typedef struct {
     unsigned int index;
     MonitorArrangement *destination;
@@ -46,9 +49,11 @@ MonitorArrangement::MonitorArrangement(
     int x, int y, int w, int h, MonitorArrangementDelegate &delegate
 ): Fl_Group(x, y, w, h), m_delegate(delegate)
 {
-
   box(FL_ENGRAVED_BOX);
   color(fl_lighter(FL_BACKGROUND_COLOR));
+
+  // Register a custom boxtype for the required monitor appearance.
+  Fl::set_boxtype(FL_CHECKERED_BOX, checkered_pattern_draw, 0, 0, 0, 0);
 
   double s = scale();
   int x_m, y_m, w_m, h_m;
@@ -67,14 +72,13 @@ MonitorArrangement::MonitorArrangement(
     data->destination = this;
     data->index = (unsigned int) i;
 
-    monitor->box(FL_BORDER_BOX);
     monitor->clear_visible_focus();
     monitor->copy_tooltip(m_delegate.description(i));
     monitor->callback(callback, data);
     monitor->type(FL_TOGGLE_BUTTON);
     monitor->when(FL_WHEN_CHANGED);
     monitor->value(m_delegate.is_selected(i) ? 1 : 0);
-    set_color(monitor, i);
+    style(monitor, i);
 
     m_monitors.push_back(monitor);
   }
@@ -90,7 +94,7 @@ MonitorArrangement::~MonitorArrangement()
 void MonitorArrangement::draw()
 {
   for (int i = 0; i != m_delegate.count(); i++) {
-    set_color(i);
+    style(i);
   }
 
   Fl_Group::draw();
@@ -125,20 +129,23 @@ int MonitorArrangement::offset_y()
   return (this->h()/2) - (m_delegate.height()/2 * scale());
 }
 
-void MonitorArrangement::set_color(int i)
+void MonitorArrangement::style(int i)
 {
-  set_color(m_monitors[i], i);
+  style(m_monitors[i], i);
 }
 
-void MonitorArrangement::set_color(Fl_Button *monitor, int i)
+void MonitorArrangement::style(Fl_Button *monitor, int i)
 {
   if (m_delegate.is_selected(i)) {
+    monitor->box(FL_BORDER_BOX);
     monitor->color(MONITOR_SELECTED_COLOR);
     monitor->selection_color(MONITOR_SELECTED_COLOR);
   } else if (m_delegate.is_required(i)) {
+    monitor->box(FL_CHECKERED_BOX);
     monitor->color(MONITOR_REQUIRED_COLOR);
     monitor->selection_color(MONITOR_REQUIRED_COLOR);
   } else {
+    monitor->box(FL_BORDER_BOX);
     monitor->color(MONITOR_AVAILABLE_COLOR);
     monitor->selection_color(MONITOR_AVAILABLE_COLOR);
   }
@@ -154,4 +161,35 @@ void MonitorArrangement::callback(Fl_Widget *, void *data)
 {
   CallbackData *cbd = (CallbackData *)data;
   cbd->destination->notify(cbd->index);
+}
+
+void MonitorArrangement::checkered_pattern_draw(
+  int x, int y, int width, int height, Fl_Color color)
+{
+  bool draw_checker = false;
+  const int CHECKER_SIZE = 8;
+  fl_color(Fl::draw_box_active() ? color : fl_inactive(color));
+
+  // Round up the square count. Later on, we remove square area that are
+  // outside the given bounding area. 
+  const int count = (width + CHECKER_SIZE - 1) / CHECKER_SIZE;
+  
+  for (int i = 0; i < count; i++) {
+    for (int j = 0; j < count; j++) {
+      
+      draw_checker = (i + j) % 2 == 0;
+
+      if (draw_checker) {
+        fl_rectf(
+          /* x = */ x + i * CHECKER_SIZE,
+          /* y = */ y + j * CHECKER_SIZE,
+          /* w = */ CHECKER_SIZE - std::max(0, ((i + 1) * CHECKER_SIZE) - width),
+          /* h = */ CHECKER_SIZE - std::max(0, ((j + 1) * CHECKER_SIZE) - height)
+        );
+      }
+    }
+  }
+
+  fl_color(Fl::draw_box_active() ? FL_BLACK : fl_inactive(FL_BLACK));
+  fl_rect(x, y, width, height);
 }

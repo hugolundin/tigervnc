@@ -63,11 +63,13 @@ private:
   double scale();
   int offset_x();
   int offset_y();
-  void set_color(int);
-  void set_color(Fl_Button*, int);
+  void style(int);
+  void style(Fl_Button*, int);
 
   void notify(int);
   static void callback(Fl_Widget *, void*);
+
+  static void checkered_pattern_draw(int, int, int, int, Fl_Color);
 };
 
 #endif
