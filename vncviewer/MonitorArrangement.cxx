@@ -34,7 +34,7 @@
 
 #define MONITOR_ARRANGEMENT_MARGIN 20
 #define MONITOR_MARGIN_SCALE_FACTOR 0.99
-#define MONITOR_AVAILABLE_COLOR fl_lighter(FL_BACKGROUND_COLOR)
+#define MONITOR_AVAILABLE_COLOR fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR)))
 #define MONITOR_SELECTED_COLOR fl_rgb_color(53, 132, 228)
 #define MONITOR_REQUIRED_COLOR fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228)))
 
@@ -49,7 +49,7 @@ MonitorArrangement::MonitorArrangement(
     int x, int y, int w, int h, MonitorArrangementDelegate &delegate
 ): Fl_Group(x, y, w, h), m_delegate(delegate)
 {
-  box(FL_ENGRAVED_BOX);
+  box(FL_DOWN_BOX);
   color(fl_lighter(FL_BACKGROUND_COLOR));
 
   // Register a custom boxtype for the required monitor appearance.
@@ -168,6 +168,10 @@ void MonitorArrangement::checkered_pattern_draw(
 {
   bool draw_checker = false;
   const int CHECKER_SIZE = 8;
+  
+  fl_color(MONITOR_AVAILABLE_COLOR);
+  fl_rectf(x, y, width, height);
+  
   fl_color(Fl::draw_box_active() ? color : fl_inactive(color));
 
   // Round up the square count. Later on, we remove square area that are
