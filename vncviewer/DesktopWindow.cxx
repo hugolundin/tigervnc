@@ -854,7 +854,6 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
 
 void DesktopWindow::fullscreen_on()
 {
-  // TODO: Why wrong screen?
   fullscreen_screens(
     Monitors::shared().top(),
     Monitors::shared().bottom(),

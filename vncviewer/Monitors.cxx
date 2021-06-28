@@ -31,11 +31,18 @@
 #include <set>
 #include <map>
 
-#include <FL/Fl.H>
-#include <FL/x.H>
+#include <rfb/LogWriter.h>
+#include <rfb/CMsgWriter.h>
 
 #include "parameters.h"
 #include "Monitors.h"
+
+#include <FL/Fl.H>
+#include <FL/x.H>
+
+using namespace rfb;
+
+static rfb::LogWriter vlog("Monitors");
 
 Monitors::Monitors():
     m_top(-1), m_bottom(-1), m_left(-1), m_right(-1),
@@ -266,13 +273,13 @@ void Monitors::load_monitors()
     assert(fl_display != NULL);
 
     if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
-        // TODO: Log a message.
+        vlog.info("X11 RANDR extension not available.");
         return;
     }
 
     XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
     if (!res) {
-        // TODO: Log a message.
+        vlog.error("Unable to get XRRScreenResources for fl_display.");
         return;
     }
 
@@ -280,7 +287,7 @@ void Monitors::load_monitors()
         for (int j = 0; j < res->ncrtc; j++) {
             XRRCrtcInfo *crtc = XRRGetCrtcInfo(fl_display, res, res->crtcs[j]);
             if (!crtc) {
-                // TODO: Log a message.
+                vlog.error("Unable to get XRRCrtcInfo for crtc %d.", j);
                 continue;
             }
 
@@ -293,7 +300,7 @@ void Monitors::load_monitors()
                 if (monitor_found) {
                     XRROutputInfo *output = XRRGetOutputInfo(fl_display, res, crtc->outputs[k]);
                     if (!output) {
-                        // TODO: Log a message. 
+                        vlog.error("Unable to get XRROutputInfo for crtc %d, output %d", j, k);
                         continue;
                     }
 
