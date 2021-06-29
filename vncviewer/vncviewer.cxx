@@ -534,7 +534,7 @@ int main(int argc, char** argv)
 #else
   rfb::initFileLogger("/tmp/vncviewer.log");
 #endif
-  rfb::LogWriter::setLogParams("*:stderr:0");
+  rfb::LogWriter::setLogParams("*:stderr:30");
 
 #ifdef SIGHUP
   signal(SIGHUP, CleanupSignalHandler);

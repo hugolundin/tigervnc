@@ -815,25 +815,20 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
   fullScreenCheckbox->callback(handleFullScreen, this);
   ty += CHECK_HEIGHT + INNER_MARGIN;
 
-  ty += GROUP_LABEL_OFFSET;
   width = tw - OUTER_MARGIN * 2;
   height = th - ty + OUTER_MARGIN * 3;
   fullScreenModeGroup = new Fl_Group(tx,
                                      ty,
                                      width,
-                                     height,
-                                     _("Full-screen mode"));
-  fullScreenModeGroup->box(FL_ENGRAVED_BOX);
-  fullScreenModeGroup->align(FL_ALIGN_LEFT | FL_ALIGN_TOP);
+                                     height);
 
   {
-    tx += GROUP_MARGIN;
-    ty += GROUP_MARGIN;
+    tx += INDENT;
 
     defaultButton = new Fl_Round_Button(LBLRIGHT(tx, ty,
                                                  RADIO_MIN_WIDTH,
                                                  RADIO_HEIGHT,
-                                                 _("Default")));
+                                                 _("Use current monitor")));
     defaultButton->type(FL_RADIO_BUTTON);
     defaultButton->callback(handleFullScreenMode, this);
     ty += RADIO_HEIGHT + TIGHT_MARGIN;
@@ -849,15 +844,15 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
     selectedButton = new Fl_Round_Button(LBLRIGHT(tx, ty,
                                                   RADIO_MIN_WIDTH,
                                                   RADIO_HEIGHT,
-                                                  _("Use selected monitors")));
+                                                  _("Use selected monitor(s)")));
     selectedButton->type(FL_RADIO_BUTTON);
     selectedButton->callback(handleFullScreenMode, this);
     ty += RADIO_HEIGHT + TIGHT_MARGIN;
 
     int full_width = tw - OUTER_MARGIN * 2;
-    int margin_width = full_width - INDENT - GROUP_MARGIN - INNER_MARGIN;
+    int margin_width = full_width - INDENT - INNER_MARGIN*2;
     int full_height = th;
-    int margin_height = full_height - ty + INNER_MARGIN * 2;
+    int margin_height = full_height - ty + INNER_MARGIN*3;
 
     monitorArrangement = new MonitorArrangement(
                               tx + INDENT,
