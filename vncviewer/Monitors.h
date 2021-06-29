@@ -36,11 +36,17 @@ enum ConfigurationMode {
 
 class Monitors: public MonitorArrangementDelegate {
 public:
-  Monitors(char const*);
+  Monitors();
   ~Monitors();
 
   /// Get the current monitor count. 
   int count() const;
+
+  /// Set the indices configuration. 
+  void set_indices(char const *);
+
+  /// Set the mode configuration.
+  void set_mode(char const *);
 
   /// Store the current configuration to disk. 
   void save(char *, int);
@@ -112,9 +118,6 @@ private:
   
   /// Load the monitors available on the system. 
   void load_monitors();
-
-  /// Load the current configuration from disk. 
-  void load_indices(char const *);
 
   /// Calculate the dimensions for fullscreen mode.
   void calculate_dimensions();

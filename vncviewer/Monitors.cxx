@@ -43,13 +43,12 @@ using namespace rfb;
 
 static rfb::LogWriter vlog("Monitors");
 
-Monitors::Monitors(char const * indices):
+Monitors::Monitors():
     m_top(-1), m_bottom(-1), m_left(-1), m_right(-1),
     m_top_y(-1), m_bottom_y(-1), m_left_x(-1), m_right_x(-1),
     m_mode(CURRENT), m_monitors(), m_indices()
 {
     load_monitors();
-    load_indices(indices);
     calculate_dimensions();
 }
 
@@ -61,6 +60,43 @@ Monitors::~Monitors()
 int Monitors::count() const
 {
     return m_monitors.size();
+}
+
+void Monitors::set_indices(char const *config)
+{
+    m_indices.clear();
+    int value = 0;
+    int count = 0;
+
+    while (*config) {
+        if (1 == sscanf(config, "%d%n", &value, &count)) {
+            m_indices.insert(value-1);
+        }
+
+        config += count;
+
+        // Scan until we find a new number.
+        for (; *config; config++) {
+            if (*config >= '0' && *config <= '9') {
+                break;
+            }
+        }
+    }
+
+    calculate_dimensions();
+}
+
+void Monitors::set_mode(char const *config)
+{
+    if (!strcmp(config, "All")) {
+        m_mode = ALL;
+    } else if (!strcmp(config, "Selected")) {
+        m_mode = SELECTED;
+    } else {
+        m_mode = CURRENT;
+    }
+
+    calculate_dimensions();
 }
 
 void Monitors::save(char * buf, int buf_len)
@@ -309,27 +345,6 @@ void Monitors::load_monitors()
     #elif defined(__APPLE__)
     // TODO: Get name from Apple APIs. 
     #endif
-}
-
-void Monitors::load_indices(char const *config)
-{
-    int value = 0;
-    int count = 0;
-
-    while (*config) {
-        if (1 == sscanf(config, "%d%n", &value, &count)) {
-            m_indices.insert(value-1);
-        }
-
-        config += count;
-
-        // Scan until we find a new number.
-        for (; *config; config++) {
-            if (*config >= '0' && *config <= '9') {
-                break;
-            }
-        }
-    }
 }
 
 void Monitors::calculate_dimensions()

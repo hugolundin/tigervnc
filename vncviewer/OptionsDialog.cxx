@@ -60,7 +60,9 @@ OptionsDialog::OptionsDialog()
 {
   int x, y;
   Fl_Button *button;
-  monitors = new Monitors(fullScreenSelectedMonitors.getValueStr());
+  monitors = new Monitors();
+  monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
+  monitors->set_mode("Selected");
 
   Fl_Tabs *tabs = new Fl_Tabs(OUTER_MARGIN, OUTER_MARGIN,
                              w() - OUTER_MARGIN*2,

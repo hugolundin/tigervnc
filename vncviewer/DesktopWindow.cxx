@@ -90,6 +90,9 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
   resizable(group);
 
   viewport = new Viewport(w, h, serverPF, cc);
+  monitors = new Monitors(); 
+  monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
+  monitors->set_mode(fullScreenMode.getValueStr());
 
   // Position will be adjusted later
   hscroll = new Fl_Scrollbar(0, 0, 0, 0);
@@ -206,8 +209,6 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
   CGEventSourceSetLocalEventsSuppressionInterval(event, 0);
   CFRelease(event);
 #endif
-
-  monitors = new Monitors(fullScreenSelectedMonitors.getValueStr()); 
 }
 
 
@@ -854,7 +855,6 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
   return ret;
 }
 
-
 void DesktopWindow::fullscreen_on()
 {
   fullscreen_screens(
@@ -1313,6 +1313,10 @@ void DesktopWindow::handleClose(Fl_Widget *wnd, void *data)
 void DesktopWindow::handleOptions(void *data)
 {
   DesktopWindow *self = (DesktopWindow*)data;
+  self->monitors->set_mode(fullScreenMode.getValueStr());
+  self->monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
+
+  
 
   if (self->fullscreen_active() && fullscreenSystemKeys)
     self->grabKeyboard();
