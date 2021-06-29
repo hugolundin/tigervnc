@@ -49,7 +49,7 @@ public:
 class MonitorArrangement: public Fl_Group {
 public:
   MonitorArrangement(
-    int x, int y, int w, int h, MonitorArrangementDelegate &delegate);
+    int x, int y, int w, int h, MonitorArrangementDelegate *delegate);
   ~MonitorArrangement();
   
 protected:
@@ -58,7 +58,7 @@ protected:
 
 private:  
   std::vector<Fl_Button *> m_monitors;
-  MonitorArrangementDelegate &m_delegate;
+  MonitorArrangementDelegate *m_delegate;
 
   double scale();
   int offset_x();

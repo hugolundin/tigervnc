@@ -22,6 +22,7 @@
 #include <map>
 
 #include <FL/Fl_Window.H>
+#include "Monitors.h"
 #include "MonitorArrangement.h"
 
 class Fl_Widget;
@@ -67,8 +68,8 @@ protected:
 
   static void handleClipboard(Fl_Widget *widget, void *data);
 
-  static void handleFullScreenSelectedMonitors(Fl_Widget *widget, void *data);
-  static void handleMonitorArrangementUpdate(void *data);
+  static void handleFullScreen(Fl_Widget *widget, void *data);
+  static void handleFullScreenMode(Fl_Widget *widget, void *data);
 
   static void handleCancel(Fl_Widget *widget, void *data);
   static void handleOK(Fl_Widget *widget, void *data);
@@ -129,8 +130,12 @@ protected:
   Fl_Int_Input *desktopHeightInput;
   Fl_Check_Button *remoteResizeCheckbox;
   Fl_Check_Button *fullScreenCheckbox;
-  Fl_Check_Button *fullScreenAllMonitorsCheckbox;
-  Fl_Check_Button *fullScreenSelectedMonitorsCheckbox;
+
+  Fl_Group *fullScreenModeGroup;
+  Fl_Round_Button *defaultButton;
+  Fl_Round_Button *allButton;
+  Fl_Round_Button *selectedButton;
+  Monitors *monitors;
   MonitorArrangement *monitorArrangement;
 
   /* Misc. */

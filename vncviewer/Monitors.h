@@ -28,23 +28,22 @@
 
 #define DESCRIPTION_MAX_LEN 256
 
+enum ConfigurationMode {
+  CURRENT,
+  ALL,
+  SELECTED
+};
+
 class Monitors: public MonitorArrangementDelegate {
 public:
-  Monitors();
+  Monitors(char const*);
   ~Monitors();
-
-  /// Singleton for current monitors.
-  static Monitors& shared();
 
   /// Get the current monitor count. 
   int count() const;
 
-  /// Refresh the current state without loading
-  /// the configuration from disk. 
-  void refresh();
-
   /// Store the current configuration to disk. 
-  void save();
+  void save(char *, int);
 
   /// Returns true if the configuration has monitors
   /// that are required to be part of it to create a 
@@ -107,6 +106,7 @@ private:
   int m_left_x;
   int m_right_x;
 
+  ConfigurationMode m_mode;
   std::vector<Monitor> m_monitors;
   std::set<unsigned int> m_indices;
   
@@ -114,7 +114,7 @@ private:
   void load_monitors();
 
   /// Load the current configuration from disk. 
-  void load_indices();
+  void load_indices(char const *);
 
   /// Calculate the dimensions for fullscreen mode.
   void calculate_dimensions();

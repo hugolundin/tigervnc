@@ -101,13 +101,11 @@ IntParameter qualityLevel("QualityLevel",
                           8);
 
 BoolParameter maximize("Maximize", "Maximize viewer window", false);
-BoolParameter fullScreen("FullScreen", "Full screen mode", false);
+BoolParameter fullScreen("FullScreen", "Enable full screen", false);
+StringParameter fullScreenMode("FullScreenMode", "Full screen mode", "");
 BoolParameter fullScreenAllMonitors("FullScreenAllMonitors",
                                     "Enable full screen over all monitors",
                                     true);
-BoolParameter fullScreenSelectedMonitorsEnabled("FullScreenSelectedMonitorsEnabled",
-                                         "Enable full screen over selected monitors",
-                                         false);
 StringParameter fullScreenSelectedMonitors("FullScreenSelectedMonitors",
                                          "Enable full screen over the given selected monitors",
                                          "1,2");
@@ -181,8 +179,8 @@ static VoidParameter* parameterArray[] = {
   &noJpeg,
   &qualityLevel,
   &fullScreen,
+  &fullScreenMode,
   &fullScreenAllMonitors,
-  &fullScreenSelectedMonitorsEnabled,
   &fullScreenSelectedMonitors,
   &desktopSize,
   &remoteResize,

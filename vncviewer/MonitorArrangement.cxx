@@ -46,7 +46,7 @@ typedef struct {
 } CallbackData;
 
 MonitorArrangement::MonitorArrangement(
-    int x, int y, int w, int h, MonitorArrangementDelegate &delegate
+    int x, int y, int w, int h, MonitorArrangementDelegate *delegate
 ): Fl_Group(x, y, w, h), m_delegate(delegate)
 {
   box(FL_DOWN_BOX);
@@ -58,8 +58,8 @@ MonitorArrangement::MonitorArrangement(
   double s = scale();
   int x_m, y_m, w_m, h_m;
 
-  for (int i = 0; i < m_delegate.count(); i++) {
-    m_delegate.dimensions(x_m, y_m, w_m, h_m, i);
+  for (int i = 0; i < m_delegate->count(); i++) {
+    m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
 
     Fl_Button *monitor = new Fl_Button(
       /* x = */ x + offset_x() + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
@@ -73,11 +73,11 @@ MonitorArrangement::MonitorArrangement(
     data->index = (unsigned int) i;
 
     monitor->clear_visible_focus();
-    monitor->copy_tooltip(m_delegate.description(i));
+    monitor->copy_tooltip(m_delegate->description(i));
     monitor->callback(callback, data);
     monitor->type(FL_TOGGLE_BUTTON);
     monitor->when(FL_WHEN_CHANGED);
-    monitor->value(m_delegate.is_selected(i) ? 1 : 0);
+    monitor->value(m_delegate->is_selected(i) ? 1 : 0);
     style(monitor, i);
 
     m_monitors.push_back(monitor);
@@ -93,7 +93,7 @@ MonitorArrangement::~MonitorArrangement()
 
 void MonitorArrangement::draw()
 {
-  for (int i = 0; i != m_delegate.count(); i++) {
+  for (int i = 0; i != m_delegate->count(); i++) {
     style(i);
   }
 
@@ -107,8 +107,8 @@ void MonitorArrangement::show()
 
 double MonitorArrangement::scale()
 {
-  double s_w = static_cast<double>(this->w()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate.width());
-  double s_h = static_cast<double>(this->h()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate.height());
+  double s_w = static_cast<double>(this->w()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate->width());
+  double s_h = static_cast<double>(this->h()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate->height());
 
   // Choose the one that scales the least, in order to
   // maximize our use of the given bounding area.
@@ -121,12 +121,12 @@ double MonitorArrangement::scale()
 
 int MonitorArrangement::offset_x()
 {
-  return (this->w()/2) - (m_delegate.width()/2 * scale());
+  return (this->w()/2) - (m_delegate->width()/2 * scale());
 }
 
 int MonitorArrangement::offset_y()
 {
-  return (this->h()/2) - (m_delegate.height()/2 * scale());
+  return (this->h()/2) - (m_delegate->height()/2 * scale());
 }
 
 void MonitorArrangement::style(int i)
@@ -136,11 +136,11 @@ void MonitorArrangement::style(int i)
 
 void MonitorArrangement::style(Fl_Button *monitor, int i)
 {
-  if (m_delegate.is_selected(i)) {
+  if (m_delegate->is_selected(i)) {
     monitor->box(FL_BORDER_BOX);
     monitor->color(MONITOR_SELECTED_COLOR);
     monitor->selection_color(MONITOR_SELECTED_COLOR);
-  } else if (m_delegate.is_required(i)) {
+  } else if (m_delegate->is_required(i)) {
     monitor->box(FL_CHECKERED_BOX);
     monitor->color(MONITOR_REQUIRED_COLOR);
     monitor->selection_color(MONITOR_REQUIRED_COLOR);
@@ -153,7 +153,7 @@ void MonitorArrangement::style(Fl_Button *monitor, int i)
 
 void MonitorArrangement::notify(int i)
 {
-  m_delegate.set(i, m_monitors[i]->value() == 1);
+  m_delegate->set(i, m_monitors[i]->value() == 1);
   redraw();
 }
 

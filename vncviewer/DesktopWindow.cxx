@@ -80,7 +80,7 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
     delayedFullscreen(false), delayedDesktopSize(false),
     keyboardGrabbed(false), mouseGrabbed(false),
     statsLastUpdates(0), statsLastPixels(0), statsLastPosition(0),
-    statsGraph(NULL)
+    statsGraph(NULL), monitors(NULL)
 {
   Fl_Group* group;
 
@@ -206,6 +206,8 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
   CGEventSourceSetLocalEventsSuppressionInterval(event, 0);
   CFRelease(event);
 #endif
+
+  monitors = new Monitors(fullScreenSelectedMonitors.getValueStr()); 
 }
 
 
@@ -227,6 +229,7 @@ DesktopWindow::~DesktopWindow()
   delete offscreen;
 
   delete statsGraph;
+  delete monitors;
 
   // FLTK automatically deletes all child widgets, so we shouldn't touch
   // them ourselves here
@@ -466,7 +469,7 @@ void DesktopWindow::draw()
 
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active() && fullScreenAllMonitors) {
+    if (fullscreen_active() && (strcmp(fullScreenMode, "All") || fullScreenAllMonitors)) {
       assert(Fl::screen_count() >= 1);
       Fl::screen_xywh(sx, sy, sw, sh, 0);
     } else {
@@ -855,10 +858,10 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
 void DesktopWindow::fullscreen_on()
 {
   fullscreen_screens(
-    Monitors::shared().top(),
-    Monitors::shared().bottom(),
-    Monitors::shared().left(),
-    Monitors::shared().right()
+    monitors->top(),
+    monitors->bottom(),
+    monitors->left(),
+    monitors->right()
   );
 
   if (!fullscreen_active()) {

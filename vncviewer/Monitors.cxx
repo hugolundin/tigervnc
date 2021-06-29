@@ -34,7 +34,6 @@
 #include <rfb/LogWriter.h>
 #include <rfb/CMsgWriter.h>
 
-#include "parameters.h"
 #include "Monitors.h"
 
 #include <FL/Fl.H>
@@ -44,13 +43,13 @@ using namespace rfb;
 
 static rfb::LogWriter vlog("Monitors");
 
-Monitors::Monitors():
+Monitors::Monitors(char const * indices):
     m_top(-1), m_bottom(-1), m_left(-1), m_right(-1),
     m_top_y(-1), m_bottom_y(-1), m_left_x(-1), m_right_x(-1),
-    m_monitors(), m_indices()
+    m_mode(CURRENT), m_monitors(), m_indices()
 {
     load_monitors();
-    load_indices();
+    load_indices(indices);
     calculate_dimensions();
 }
 
@@ -59,26 +58,13 @@ Monitors::~Monitors()
 
 }
 
-Monitors& Monitors::shared()
-{
-    static Monitors monitors;
-    return monitors;
-}
-
 int Monitors::count() const
 {
     return m_monitors.size();
 }
 
-void Monitors::refresh()
+void Monitors::save(char * buf, int buf_len)
 {
-    load_monitors();
-    calculate_dimensions();
-}
-
-void Monitors::save()
-{
-    char buf[1024] = {0};
     char const * separator = "";
     int bytes_written = 0;
 
@@ -88,7 +74,7 @@ void Monitors::save()
     {
         bytes_written += snprintf(
             buf+bytes_written,
-            1024-bytes_written,
+            buf_len-bytes_written,
             "%s%u",
             separator,
             (*index)+1
@@ -96,9 +82,6 @@ void Monitors::save()
 
         separator = ",";
     }
-
-    // Write the new configuration. 
-    fullScreenSelectedMonitors.setParam(buf);
 }
 
 bool Monitors::has_required() const
@@ -145,8 +128,7 @@ bool Monitors::is_selected(unsigned int monitor) const
     assert(monitor >= 0);
     assert(monitor < m_monitors.size());
 
-    // All monitors are always selected in this mode. 
-    if (fullScreenAllMonitors) {
+    if (m_mode == ALL) {
         return true;
     }
 
@@ -329,14 +311,10 @@ void Monitors::load_monitors()
     #endif
 }
 
-void Monitors::load_indices()
+void Monitors::load_indices(char const *config)
 {
     int value = 0;
     int count = 0;
-
-    // Because sscanf modifies the string it parses, we want to 
-    // make a copy before using it. 
-    const char * config = fullScreenSelectedMonitors.getValueStr();
 
     while (*config) {
         if (1 == sscanf(config, "%d%n", &value, &count)) {
@@ -362,8 +340,8 @@ void Monitors::calculate_dimensions()
     for (std::vector<Monitor>::size_type monitor = 0;
          monitor < m_monitors.size();
          monitor++)
-    {
-        if (is_selected(monitor)) {
+    {   
+        if (m_mode == ALL || is_selected(monitor)) {
             selected.push_back(m_monitors[monitor]);
         }
     }
@@ -406,7 +384,6 @@ void Monitors::calculate_dimensions()
             m_right_x = monitor->x + monitor->w;
         }
     }
-
 }
 
 bool Monitors::inside(int x, int y) const
@@ -416,10 +393,7 @@ bool Monitors::inside(int x, int y) const
 
 bool Monitors::multiple_monitors() const
 {
-    bool selected_monitors_enabled = fullScreenSelectedMonitorsEnabled &&
-        strcmp(fullScreenSelectedMonitors, "") != 0;
- 
-    return fullScreenAllMonitors || selected_monitors_enabled;
+    return m_mode != CURRENT;
 }
 
 int Monitors::sort_cb(const void *a, const void *b)
