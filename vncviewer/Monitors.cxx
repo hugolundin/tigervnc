@@ -211,6 +211,33 @@ void Monitors::dimensions(int& x, int& y, int& w, int& h, unsigned int monitor) 
     h = m_monitors[monitor].h;
 }
 
+int Monitors::primary() const
+{
+    // On macOS, Windows and GNOME the monitor with FLTK index 0
+    // is the primary monitor (containing a toolbar). If that one
+    // is part of the current configuration, we return it.
+    for (int monitor = 0; monitor < count(); monitor++) {
+        if (is_selected(monitor) || is_required(monitor)) {
+            if (m_monitors[monitor].fltk_index == 0) {
+                vlog.debug("%d (%d) is primary monitor", monitor+1, 0);
+                return 0;
+            }
+        }
+    }
+
+    // If the primary isn't part of the configuration, we take the lowest
+    // index of our own mapping (the leftmost monitor).
+    for (int monitor = 0; monitor < count(); monitor++) {
+        if (is_selected(monitor) || is_required(monitor)) {
+            vlog.debug("%d (%d) is primary monitor", monitor+1, m_monitors[monitor].fltk_index);
+            return m_monitors[monitor].fltk_index;
+        }
+    }
+
+    vlog.debug("No primary monitor found ");
+    return -1;
+}
+
 int Monitors::top() const
 {
     return multiple_monitors() ? m_top : -1;

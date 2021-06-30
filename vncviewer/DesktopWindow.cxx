@@ -470,9 +470,9 @@ void DesktopWindow::draw()
 
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active() && (strcmp(fullScreenMode, "All") || fullScreenAllMonitors)) {
+    if (fullscreen_active() && (!strcmp(fullScreenMode, "Selected") || !strcmp(fullScreenMode, "All") || fullScreenAllMonitors)) {
       assert(Fl::screen_count() >= 1);
-      Fl::screen_xywh(sx, sy, sw, sh, 0);
+      Fl::screen_xywh(sx, sy, sw, sh, monitors->primary());
     } else {
       sx = 0;
       sy = 0;
@@ -483,6 +483,8 @@ void DesktopWindow::draw()
     oy = Y = sy + 50;
     ow = overlay->width();
     oh = overlay->height();
+
+    vlog.debug("ox=%d,oy=%d,ow=%d,oh=%d", ox, oy, ow, oh);
 
     fl_clip_box(ox, oy, ow, oh, ox, oy, ow, oh);
 

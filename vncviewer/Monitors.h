@@ -77,16 +77,19 @@ public:
   /// Return the dimensions for the given monitor.
   void dimensions(int&, int&, int&, int&, unsigned int) const;
 
-  /// Return the FLTK of the monitor limiting the top of the frame buffer. 
+  /// Return the FLTK index of the primary monitor in the current configuration.
+  int primary() const;
+
+  /// Return the FLTK index of the monitor limiting the top of the frame buffer. 
   int top() const;
 
-  /// Return the FLTK of the monitor limiting the left of the frame buffer. 
+  /// Return the FLTK index of the monitor limiting the left of the frame buffer. 
   int left() const;
 
-  /// Return the FLTK of the monitor limiting the right of the frame buffer. 
+  /// Return the FLTK index of the monitor limiting the right of the frame buffer. 
   int right() const;
 
-  /// Return the FLTK of the monitor limiting the bottom of the frame buffer. 
+  /// Return the FLTK index of the monitor limiting the bottom of the frame buffer. 
   int bottom() const;
 
   /// Return the width of the monitor configuration.
