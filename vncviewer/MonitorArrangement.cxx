@@ -56,14 +56,35 @@ MonitorArrangement::MonitorArrangement(
   Fl::set_boxtype(FL_CHECKERED_BOX, checkered_pattern_draw, 0, 0, 0, 0);
 
   double s = scale();
-  int x_m, y_m, w_m, h_m;
+  int x_m, y_m, w_m, h_m, x_b, y_b;
+  x_m = y_m = w_m = h_m = x_b = y_b = 0;
 
+  // Some systems (macOS) may have monitors with negative coordinates. 
+  // We want to start drawing the GUI from (0, 0). Therefore, if we
+  // have a monitor with coordinates that is smaller, we need to add
+  // an offset to everything. 
+  for (int i = 0; i < m_delegate->count(); i++) {
+    m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
+
+    if (x_m < x_b) {
+      x_b = x_m;
+    }
+
+    if (y_m < y_b) {
+      y_b = y_m;
+    }
+  }
+
+  x_m = abs(x_m);
+  y_m = abs(y_m);
+
+  // Build widgets for monitors.
   for (int i = 0; i < m_delegate->count(); i++) {
     m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
 
     Fl_Button *monitor = new Fl_Button(
-      /* x = */ x + offset_x() + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
-      /* y = */ y + offset_y() + y_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*y_m*s,
+      /* x = */ x + offset_x() + x_b*s + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
+      /* y = */ y + offset_y() + y_b*s + y_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*y_m*s,
       /* w = */ w_m*s*MONITOR_MARGIN_SCALE_FACTOR,
       /* h = */ h_m*s*MONITOR_MARGIN_SCALE_FACTOR
     );
