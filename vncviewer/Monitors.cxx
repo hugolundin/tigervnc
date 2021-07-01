@@ -260,32 +260,52 @@ int Monitors::bottom() const
 
 int Monitors::width() const
 {
-    int w = 0;
-    int result = 0;
+    int x_min = 0;
+    int x_max = 0;
+    int left, right;
 
+    // Find the smallest and largest x coordinates
+    // looking through all displays. Their delta will
+    // determine the width.
     for (int i = 0; i < count(); i++) {
-        w = m_monitors[i].w + m_monitors[i].x;
-        if (w > result) {
-            result = w;
+        left = m_monitors[i].x;
+        right = m_monitors[i].x + m_monitors[i].w;
+
+        if (left < x_min) {
+            x_min = left;
+        }
+
+        if (right > x_max) {
+            x_max = right;
         }
     }
 
-    return result;
+    return x_max - x_min;
 }
 
 int Monitors::height() const
 {
-    int h = 0;
-    int result = 0;
+    int y_min = 0;
+    int y_max = 0;
+    int top, bottom;
 
+    // Find the smallest and largest y coordinates
+    // looking through all displays. Their delta will
+    // determine the height.
     for (int i = 0; i < count(); i++) {
-        h = m_monitors[i].h + m_monitors[i].y;
-        if (h > result) {
-            result = h;
+        top = m_monitors[i].y;
+        bottom = m_monitors[i].y + m_monitors[i].h;
+
+        if (top < y_min) {
+            y_min = top;
+        }
+
+        if (bottom > y_max) {
+            y_max = bottom;
         }
     }
 
-    return result;
+    return y_max - y_min;
 }
 
 void Monitors::load_monitors()
