@@ -56,14 +56,17 @@ MonitorArrangement::MonitorArrangement(
   Fl::set_boxtype(FL_CHECKERED_BOX, checkered_pattern_draw, 0, 0, 0, 0);
 
   double s = scale();
-  int x_m, y_m, w_m, h_m;
+  int x_m, y_m, w_m, h_m, x_b, y_b;
+
+  x_b = offset_xb();
+  y_b = offset_yb();
 
   for (int i = 0; i < m_delegate->count(); i++) {
     m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
 
     Fl_Button *monitor = new Fl_Button(
-      /* x = */ x + offset_x() + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
-      /* y = */ y + offset_y() + y_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*y_m*s,
+      /* x = */ x + offset_x() + x_b + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
+      /* y = */ y + offset_y() + y_b + y_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*y_m*s,
       /* w = */ w_m*s*MONITOR_MARGIN_SCALE_FACTOR,
       /* h = */ h_m*s*MONITOR_MARGIN_SCALE_FACTOR
     );
@@ -127,6 +130,38 @@ int MonitorArrangement::offset_x()
 int MonitorArrangement::offset_y()
 {
   return (this->h()/2) - (m_delegate->height()/2 * scale());
+}
+
+int MonitorArrangement::offset_xb()
+{
+  int xb = 0;
+  int x, y, w, h;
+
+  for (int i = 0; i < m_delegate->count(); i++) {
+    m_delegate->dimensions(x, y, w, h, i);
+
+    if (x < xb) {
+      xb = x;
+    }
+  }
+
+  return xb;
+}
+
+int MonitorArrangement::offset_yb()
+{
+  int yb = 0;
+  int x, y, w, h;
+
+  for (int i = 0; i < m_delegate->count(); i++) {
+    m_delegate->dimensions(x, y, w, h, i);
+
+    if (y < yb) {
+      yb = y;
+    }
+  }
+
+  return yb;
 }
 
 void MonitorArrangement::style(int i)

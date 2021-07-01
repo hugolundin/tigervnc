@@ -307,6 +307,11 @@ void Monitors::load_monitors()
         m_monitors.push_back(monitor);
     }
 
+    // No monitors found. 
+    if (m_monitors.size() <= 0) {
+        return;
+    }
+
     // Sort the monitors according to the specification in the vncviewer manual. 
     qsort(&m_monitors[0], m_monitors.size(), sizeof(*(&m_monitors[0])), sort_cb);
 

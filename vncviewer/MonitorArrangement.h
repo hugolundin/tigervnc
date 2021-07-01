@@ -63,6 +63,8 @@ private:
   double scale();
   int offset_x();
   int offset_y();
+  int offset_xb();
+  int offset_yb();
   void style(int);
   void style(Fl_Button*, int);
 
