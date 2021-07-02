@@ -428,7 +428,7 @@ void OptionsDialog::storeOptions(void)
   } else if (selectedMonitorsButton->value()) {
     fullScreenMode.setParam("Selected");
   } else {
-    fullScreenMode.setParam("");
+    fullScreenMode.setParam("Current");
   }
   
   char buf[1024];
