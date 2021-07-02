@@ -484,7 +484,6 @@ void DesktopWindow::draw()
     ow = overlay->width();
     oh = overlay->height();
 
-    vlog.debug("ox=%d,oy=%d,ow=%d,oh=%d", ox, oy, ow, oh);
 
     fl_clip_box(ox, oy, ow, oh, ox, oy, ow, oh);
 

@@ -219,7 +219,6 @@ int Monitors::primary() const
     for (int monitor = 0; monitor < count(); monitor++) {
         if (is_selected(monitor) || is_required(monitor)) {
             if (m_monitors[monitor].fltk_index == 0) {
-                vlog.debug("%d (%d) is primary monitor", monitor+1, 0);
                 return 0;
             }
         }
@@ -229,12 +228,11 @@ int Monitors::primary() const
     // index of our own mapping (the leftmost monitor).
     for (int monitor = 0; monitor < count(); monitor++) {
         if (is_selected(monitor) || is_required(monitor)) {
-            vlog.debug("%d (%d) is primary monitor", monitor+1, m_monitors[monitor].fltk_index);
             return m_monitors[monitor].fltk_index;
         }
     }
 
-    vlog.debug("No primary monitor found ");
+    vlog.error("No primary monitor found");
     return -1;
 }
 
