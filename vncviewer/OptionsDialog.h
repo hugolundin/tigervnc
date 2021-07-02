@@ -22,8 +22,6 @@
 #include <map>
 
 #include <FL/Fl_Window.H>
-#include "Monitors.h"
-#include "MonitorArrangement.h"
 
 class Fl_Widget;
 class Fl_Group;
@@ -32,6 +30,8 @@ class Fl_Round_Button;
 class Fl_Input;
 class Fl_Int_Input;
 class Fl_Choice;
+class Monitors;
+class MonitorArrangement;
 
 typedef void (OptionsCallback)(void*);
 
