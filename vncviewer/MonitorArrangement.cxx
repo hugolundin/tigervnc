@@ -33,7 +33,9 @@ typedef struct {
 
 MonitorArrangement::MonitorArrangement(
    int x, int y, int w, int h, MonitorArrangementDelegate *delegate
-): Fl_Group(x, y, w, h), m_monitors(), m_delegate(delegate)
+): Fl_Group(x, y, w, h), m_monitors(), m_delegate(delegate),
+   SELECTION_COLOR(fl_rgb_color(53, 132, 228)),
+   AVAILABLE_COLOR(fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR))))
 {
   box(FL_DOWN_BOX);
   color(fl_lighter(FL_BACKGROUND_COLOR));

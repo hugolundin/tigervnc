@@ -51,8 +51,8 @@ private:
   std::vector<Fl_Button *> m_monitors;
   MonitorArrangementDelegate *m_delegate;
 
-  const Fl_Color SELECTION_COLOR = fl_rgb_color(53, 132, 228);
-  const Fl_Color AVAILABLE_COLOR = fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR)));
+  const Fl_Color SELECTION_COLOR;
+  const Fl_Color AVAILABLE_COLOR;
 
   double scale();
   int offset_x();
