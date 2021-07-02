@@ -314,7 +314,6 @@ void OptionsDialog::loadOptions(void)
   }
 
   handleDesktopSize(desktopSizeCheckbox, this);
-  handleFullScreen(fullScreenCheckbox, this);
   handleFullScreenMode(selectedButton, this);
 
   /* Misc. */
@@ -812,7 +811,6 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
                                                    CHECK_MIN_WIDTH,
                                                    CHECK_HEIGHT,
                                                    _("Enable full-screen")));
-  fullScreenCheckbox->callback(handleFullScreen, this);
   ty += CHECK_HEIGHT + INNER_MARGIN;
 
   width = tw - OUTER_MARGIN * 2;
@@ -973,17 +971,6 @@ void OptionsDialog::handleClipboard(Fl_Widget *widget, void *data)
   else
     dialog->sendPrimaryCheckbox->deactivate();
 #endif
-}
-
-void OptionsDialog::handleFullScreen(Fl_Widget *widget, void *data)
-{
-  OptionsDialog *dialog = (OptionsDialog*)data;
-
-  if (dialog->fullScreenCheckbox->value()) {
-    dialog->fullScreenModeGroup->activate();
-  } else {
-    dialog->fullScreenModeGroup->deactivate();
-  }
 }
 
 void OptionsDialog::handleFullScreenMode(Fl_Widget *widget, void *data)
