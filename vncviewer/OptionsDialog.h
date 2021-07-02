@@ -132,9 +132,9 @@ protected:
   Fl_Check_Button *fullScreenCheckbox;
 
   Fl_Group *fullScreenModeGroup;
-  Fl_Round_Button *defaultButton;
-  Fl_Round_Button *allButton;
-  Fl_Round_Button *selectedButton;
+  Fl_Round_Button *currentMonitorButton;
+  Fl_Round_Button *allMonitorsButton;
+  Fl_Round_Button *selectedMonitorsButton;
   Monitors *monitors;
   MonitorArrangement *monitorArrangement;
 
