@@ -26,9 +26,6 @@
 
 #define MONITOR_ARRANGEMENT_MARGIN 20
 #define MONITOR_MARGIN_SCALE_FACTOR 0.99
-#define MONITOR_AVAILABLE_COLOR fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR)))
-#define MONITOR_SELECTED_COLOR fl_rgb_color(53, 132, 228)
-#define MONITOR_REQUIRED_COLOR fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228)))
 
 static const Fl_Boxtype FL_CHECKERED_BOX = FL_FREE_BOXTYPE;
 
@@ -38,8 +35,8 @@ typedef struct {
 } CallbackData;
 
 MonitorArrangement::MonitorArrangement(
-    int x, int y, int w, int h, MonitorArrangementDelegate *delegate
-): Fl_Group(x, y, w, h), m_delegate(delegate)
+   int x, int y, int w, int h, MonitorArrangementDelegate *delegate
+): Fl_Group(x, y, w, h), m_monitors(), m_delegate(delegate)
 {
   box(FL_DOWN_BOX);
   color(fl_lighter(FL_BACKGROUND_COLOR));
@@ -144,18 +141,13 @@ void MonitorArrangement::style(int i)
 
 void MonitorArrangement::style(Fl_Button *monitor, int i)
 {
-  if (m_delegate->is_selected(i)) {
-    monitor->box(FL_BORDER_BOX);
-    monitor->color(MONITOR_SELECTED_COLOR);
-    monitor->selection_color(MONITOR_SELECTED_COLOR);
-  } else if (m_delegate->is_required(i)) {
+  if (m_delegate->is_required(i)) {
     monitor->box(FL_CHECKERED_BOX);
-    monitor->color(MONITOR_REQUIRED_COLOR);
-    monitor->selection_color(MONITOR_REQUIRED_COLOR);
+    monitor->color(SELECTION_COLOR);
   } else {
     monitor->box(FL_BORDER_BOX);
-    monitor->color(MONITOR_AVAILABLE_COLOR);
-    monitor->selection_color(MONITOR_AVAILABLE_COLOR);
+    monitor->color(AVAILABLE_COLOR);
+    monitor->selection_color(SELECTION_COLOR);
   }
 }
 
@@ -176,10 +168,10 @@ void MonitorArrangement::checkered_pattern_draw(
 {
   bool draw_checker = false;
   const int CHECKER_SIZE = 8;
-  
-  fl_color(MONITOR_AVAILABLE_COLOR);
+
+  fl_color(fl_lighter(fl_lighter(fl_lighter(color))));
   fl_rectf(x, y, width, height);
-  
+
   fl_color(Fl::draw_box_active() ? color : fl_inactive(color));
 
   // Round up the square count. Later on, we remove square area that are
