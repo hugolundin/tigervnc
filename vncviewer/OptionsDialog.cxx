@@ -305,9 +305,9 @@ void OptionsDialog::loadOptions(void)
 
   fullScreenCheckbox->value(fullScreen);
 
-  if (!strcmp(fullScreenMode, "All")) {
+  if (!strcasecmp(fullScreenMode, "all")) {
     allMonitorsButton->setonly();
-  } else if (!strcmp(fullScreenMode, "Selected")) {
+  } else if (!strcasecmp(fullScreenMode, "selected")) {
     selectedMonitorsButton->setonly();
   } else {
     currentMonitorButton->setonly();
