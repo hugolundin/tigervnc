@@ -468,9 +468,13 @@ void DesktopWindow::draw()
     int ox, oy, ow, oh;
     int sx, sy, sw, sh;
 
+    bool multiple_monitors = !strcasecmp(fullScreenMode, "selected")
+                          || !strcasecmp(fullScreenMode, "all")
+                          || fullScreenAllMonitors;
+
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
-    if (fullscreen_active() && (!strcmp(fullScreenMode, "Selected") || !strcmp(fullScreenMode, "All") || fullScreenAllMonitors)) {
+    if (fullscreen_active() && multiple_monitors) {
       assert(Fl::screen_count() >= 1);
       Fl::screen_xywh(sx, sy, sw, sh, monitors->primary());
     } else {
