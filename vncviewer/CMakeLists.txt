@@ -55,12 +55,7 @@ endif()
 
 target_link_libraries(vncviewer rfb network rdr os ${FLTK_LIBRARIES} ${GETTEXT_LIBRARIES})
 
-if(X11_FOUND AND X11_Xrandr_LIB)
-  add_definitions(-DHAVE_XRANDR)
-  target_link_libraries(vncviewer ${X11_Xrandr_LIB})
-else()
-  message(WARNING "No Xrandr extension.  vncviewer will not be able to identify monitors.")
-endif()
+
 
 if(WIN32)
   target_link_libraries(vncviewer msimg32)
@@ -70,6 +65,11 @@ elseif(APPLE)
   target_link_libraries(vncviewer "-framework IOKit")
 else()
   target_link_libraries(vncviewer ${X11_Xi_LIB})
+  
+  if(X11_FOUND AND X11_Xrandr_LIB)
+    add_definitions(-DHAVE_XRANDR)
+    target_link_libraries(vncviewer ${X11_Xrandr_LIB})
+  endif()
 endif()
 
 install(TARGETS vncviewer DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})
