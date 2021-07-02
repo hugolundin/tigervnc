@@ -38,7 +38,7 @@
 #define MONITOR_SELECTED_COLOR fl_rgb_color(53, 132, 228)
 #define MONITOR_REQUIRED_COLOR fl_lighter(fl_lighter(fl_rgb_color(53, 132, 228)))
 
-#define FL_CHECKERED_BOX (Fl_Boxtype) FL_FREE_BOXTYPE
+static const Fl_Boxtype FL_CHECKERED_BOX = FL_FREE_BOXTYPE;
 
 typedef struct {
     unsigned int index;
