@@ -20,15 +20,7 @@
 #include <algorithm>
 
 #include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Check_Button.H>
-#include <FL/Fl_Timer.H>
-#include <FL/Fl_Group.H>
 #include <FL/fl_draw.H>
-#include <FL/Fl_PNG_Image.H>
-#include <FL/Fl_Check_Browser.H>
 
 #include "MonitorArrangement.h"
 
