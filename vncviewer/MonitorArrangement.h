@@ -54,7 +54,6 @@ public:
   
 protected:
   virtual void draw();
-  virtual void show();
 
 private:  
   std::vector<Fl_Button *> m_monitors;

@@ -121,11 +121,6 @@ void MonitorArrangement::draw()
   Fl_Group::draw();
 }
 
-void MonitorArrangement::show()
-{
-    Fl_Group::show();
-}
-
 double MonitorArrangement::scale()
 {
   double s_w = static_cast<double>(this->w()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate->width());
