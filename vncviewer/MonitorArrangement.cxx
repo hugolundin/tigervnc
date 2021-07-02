@@ -24,9 +24,6 @@
 
 #include "MonitorArrangement.h"
 
-#define MONITOR_ARRANGEMENT_MARGIN 20
-#define MONITOR_MARGIN_SCALE_FACTOR 0.99
-
 static const Fl_Boxtype FL_CHECKERED_BOX = FL_FREE_BOXTYPE;
 
 typedef struct {
@@ -66,16 +63,17 @@ MonitorArrangement::MonitorArrangement(
 
   x_m = abs(x_m);
   y_m = abs(y_m);
+  const double MARGIN_SCALE_FACTOR = 0.99;
 
   // Build widgets for monitors.
   for (int i = 0; i < m_delegate->count(); i++) {
     m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
 
     Fl_Button *monitor = new Fl_Button(
-      /* x = */ x + offset_x() + x_b*s + x_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*x_m*s,
-      /* y = */ y + offset_y() + y_b*s + y_m*s + (1 - MONITOR_MARGIN_SCALE_FACTOR)*y_m*s,
-      /* w = */ w_m*s*MONITOR_MARGIN_SCALE_FACTOR,
-      /* h = */ h_m*s*MONITOR_MARGIN_SCALE_FACTOR
+      /* x = */ x + offset_x() + x_b*s + x_m*s + (1 - MARGIN_SCALE_FACTOR)*x_m*s,
+      /* y = */ y + offset_y() + y_b*s + y_m*s + (1 - MARGIN_SCALE_FACTOR)*y_m*s,
+      /* w = */ w_m*s*MARGIN_SCALE_FACTOR,
+      /* h = */ h_m*s*MARGIN_SCALE_FACTOR
     );
 
     CallbackData *data = new CallbackData();
@@ -112,8 +110,9 @@ void MonitorArrangement::draw()
 
 double MonitorArrangement::scale()
 {
-  double s_w = static_cast<double>(this->w()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate->width());
-  double s_h = static_cast<double>(this->h()-MONITOR_ARRANGEMENT_MARGIN) / static_cast<double>(m_delegate->height());
+  const int MARGIN = 20;
+  double s_w = static_cast<double>(this->w()-MARGIN) / static_cast<double>(m_delegate->width());
+  double s_h = static_cast<double>(this->h()-MARGIN) / static_cast<double>(m_delegate->height());
 
   // Choose the one that scales the least, in order to
   // maximize our use of the given bounding area.
