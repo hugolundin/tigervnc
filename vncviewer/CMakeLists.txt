@@ -17,7 +17,6 @@ set(VNCVIEWER_SOURCES
   parameters.cxx
   keysym2ucs.c
   touch.cxx
-  Monitors.cxx
   MonitorArrangement.cxx
   MonitorIndicesParameter.cxx
   vncviewer.cxx)

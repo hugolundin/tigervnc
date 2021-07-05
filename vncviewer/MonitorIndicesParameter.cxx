@@ -31,17 +31,17 @@ static LogWriter vlog("MonitorIndicesParameter");
 MonitorIndicesParameter::MonitorIndicesParameter(const char* name_, const char* desc_, const char* v)
 : StringParameter(name_, desc_, v) {}
 
-void MonitorIndicesParameter::get(std::set<int>& indices)
+std::set<int> MonitorIndicesParameter::get()
 {
     int value = 0;
     int count = 0;
+    std::set<int> indices;
     std::set<int> config_indices;
-    std::vector<Monitor> monitors;
+    std::vector<MonitorIndicesParameter::Monitor> monitors = this->monitors();
 
-    get_monitors(monitors);
     if (monitors.size() <= 0) {
         vlog.error("No monitors found.");
-        return;
+        return indices;
     }
 
     // sscanf will modify the parsed string. Therefore
@@ -68,7 +68,7 @@ void MonitorIndicesParameter::get(std::set<int>& indices)
 
     if (config_indices.size() <= 0) {
         vlog.debug("No indices parsed.");
-        return;
+        return indices;
     }
 
     // Go through the monitors and see what indices are present in the config.
@@ -77,17 +77,18 @@ void MonitorIndicesParameter::get(std::set<int>& indices)
             indices.insert(monitors[i].fltk_index);
         }
     }
+
+    return indices;
 }
 
 
-bool MonitorIndicesParameter::set(std::set<int>& indices)
+bool MonitorIndicesParameter::set(std::set<int> indices)
 {
     static const int BUF_MAX_LEN = 1024;
     char buf[BUF_MAX_LEN] = {0};
-    std::vector<Monitor> monitors;
     std::set<int> config_indices;
+    std::vector<MonitorIndicesParameter::Monitor> monitors = this->monitors();
 
-    get_monitors(monitors);
     if (monitors.size() <=  0) {
         vlog.error("No monitors found.");
         // Don't return, store the configuration anyways.
@@ -120,8 +121,10 @@ bool MonitorIndicesParameter::set(std::set<int>& indices)
     return StringParameter::setParam(buf);
 }
 
-void MonitorIndicesParameter::get_monitors(std::vector<Monitor>& monitors)
+std::vector<MonitorIndicesParameter::Monitor> MonitorIndicesParameter::monitors()
 {
+    std::vector<Monitor> monitors;
+
     // Start by creating a struct for every monitor.
     for (int i = 0; i < Fl::screen_count(); i++) {
         Monitor monitor = {0};
@@ -141,6 +144,7 @@ void MonitorIndicesParameter::get_monitors(std::vector<Monitor>& monitors)
 
     // Sort the monitors according to the specification in the vncviewer manual. 
     qsort(&monitors[0], monitors.size(), sizeof(*(&monitors[0])), sort_cb);
+    return monitors;
 }
 
 int MonitorIndicesParameter::sort_cb(const void *a, const void *b)

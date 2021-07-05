@@ -22,48 +22,60 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Group.H>
 
-#include <vector>
-
-class MonitorArrangementDelegate {
-public:
-  virtual ~MonitorArrangementDelegate(){};
-  virtual int count() const=0;
-  virtual bool is_selected(unsigned int index) const=0;
-  virtual bool is_required(unsigned int index) const=0;
-  virtual void set(unsigned int, bool)=0;
-  virtual void dimensions(int&, int&, int&, int&) const=0;
-  virtual char const * description(unsigned int) const=0;
-  virtual void dimensions(int&, int&, int&, int&, unsigned int) const=0;
-  virtual int width() const=0;
-  virtual int height() const=0;
-};
-
 class MonitorArrangement: public Fl_Group {
 public:
-  MonitorArrangement(
-    int x, int y, int w, int h, MonitorArrangementDelegate *delegate);
+  MonitorArrangement(int x, int y, int w, int h);
   ~MonitorArrangement();
-  
+
+  // Get selected indices.
+  std::set<int> get();
+
+  // Set selected indices. 
+  void set(std::set<int> indices);
+
 protected:
   virtual void draw();
 
 private:
-  std::vector<Fl_Button *> m_monitors;
-  MonitorArrangementDelegate *m_delegate;
-
   const Fl_Color SELECTION_COLOR;
   const Fl_Color AVAILABLE_COLOR;
+  std::vector<Fl_Button *> m_monitors;
 
+  // Layout the monitor arrangement.
+  void layout();
+
+  // Return true if the given monitor is required to be part of the configuration
+  // for it to be valid. A configuration is only valid if the framebuffer created
+  // from is rectangular.
+  bool is_required(int i);
+
+  // Calculate the scale of the monitor arrangement. 
   double scale();
-  int offset_x();
-  int offset_y();
-  void style(int);
-  void style(Fl_Button*, int);
 
-  void notify(int);
-  static void callback(Fl_Widget *, void*);
+  // Return the size of the monitor arrangement. 
+  std::pair<int, int> size();
 
-  static void checkered_pattern_draw(int, int, int, int, Fl_Color);
+  // Return the offset required for centering the monitor
+  // arrangement in the given bounding area. 
+  std::pair<int, int> offset();
+
+  // Return the origin of the monitor arrangement (top left corner). 
+  std::pair<int, int> origin();
+
+  // Return true if the given coordinates are inside the given bounding area:
+  //
+  //   +------top_y-------+
+  //   |                  |
+  // left_x   (x,y)    right_x
+  //   |                  |
+  //   +-----bottom_y-----+
+  //
+  bool inside(int top_y, int bottom_y, int left_x, int right_x, int x, int y);
+
+  static void monitor_pressed(Fl_Widget *widget, void *user_data);
+  
+  static void checkered_pattern_draw(
+    int x, int y, int width, int height, Fl_Color color);
 };
 
 #endif

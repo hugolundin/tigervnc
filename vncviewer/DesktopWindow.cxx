@@ -37,7 +37,6 @@
 #include "CConn.h"
 #include "Surface.h"
 #include "Viewport.h"
-#include "Monitors.h"
 #include "touch.h"
 
 #include <FL/Fl.H>
@@ -80,7 +79,7 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
     delayedFullscreen(false), delayedDesktopSize(false),
     keyboardGrabbed(false), mouseGrabbed(false),
     statsLastUpdates(0), statsLastPixels(0), statsLastPosition(0),
-    statsGraph(NULL), monitors(NULL)
+    statsGraph(NULL)
 {
   Fl_Group* group;
 
@@ -90,9 +89,6 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
   resizable(group);
 
   viewport = new Viewport(w, h, serverPF, cc);
-  monitors = new Monitors(); 
-  // monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
-  monitors->set_mode(fullScreenMode.getValueStr());
 
   // Position will be adjusted later
   hscroll = new Fl_Scrollbar(0, 0, 0, 0);
@@ -230,7 +226,6 @@ DesktopWindow::~DesktopWindow()
   delete offscreen;
 
   delete statsGraph;
-  delete monitors;
 
   // FLTK automatically deletes all child widgets, so we shouldn't touch
   // them ourselves here
@@ -476,7 +471,8 @@ void DesktopWindow::draw()
     // primary screen rather than the entire window
     if (fullscreen_active() && multiple_monitors) {
       assert(Fl::screen_count() >= 1);
-      Fl::screen_xywh(sx, sy, sw, sh, monitors->primary());
+      // TODO: Get primary from selected monitors.
+      Fl::screen_xywh(sx, sy, sw, sh, 0);
     } else {
       sx = 0;
       sy = 0;
@@ -862,13 +858,55 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
 
 void DesktopWindow::fullscreen_on()
 {
-  fullscreen_screens(
-    monitors->top(),
-    monitors->bottom(),
-    monitors->left(),
-    monitors->right()
-  );
+  int top, bottom, left, right;
+  std::set<int> selected = fullScreenSelectedMonitors.get();
 
+  // If there are monitors selected, calculate the dimensions
+  // of the frame buffer, expressed in the monitor indices that
+  // limits it. 
+  if (selected.size() > 0) {
+    
+    int x, y, w, h;
+    int top_y, bottom_y, left_x, right_x;
+    std::set<int>::iterator it = selected.begin();
+
+    // Get first monitor dimensions.
+    Fl::screen_xywh(x, y, w, h, *it);
+    top = bottom = left = right = *it;
+    top_y = y;
+    bottom_y = y + h;
+    left_x = x;
+    right_x = x + w;
+
+    // Keep going through the rest of the monitors.
+    for (; it != selected.end(); it++) {
+      Fl::screen_xywh(x, y, w, h, *it);
+
+      if (y < top_y) {
+        top = *it;
+        top_y = y;
+      }
+
+      if ((y + h) > bottom_y) {
+        bottom = *it;
+        bottom_y = y + h;
+      }
+
+      if (x < left_x) {
+        left = *it;
+        left_x = x;
+      }
+
+      if ((x + w) > right_x) {
+        right = *it;
+        right_x = x + w;
+      }
+    }
+  } else {
+    top = bottom = left = right = -1;
+  }
+
+  fullscreen_screens(top, bottom, left, right);
   if (!fullscreen_active()) {
     fullscreen();
   }
@@ -1318,10 +1356,6 @@ void DesktopWindow::handleClose(Fl_Widget *wnd, void *data)
 void DesktopWindow::handleOptions(void *data)
 {
   DesktopWindow *self = (DesktopWindow*)data;
-  self->monitors->set_mode(fullScreenMode.getValueStr());
-  // self->monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
-
-  
 
   if (self->fullscreen_active() && fullscreenSystemKeys)
     self->grabKeyboard();
