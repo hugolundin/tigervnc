@@ -21,18 +21,17 @@
 #include <set>
 
 #include <FL/Fl.H>
-
 #include <rfb/LogWriter.h>
 
-#include "MonitorIndexParameter.h"
+#include "MonitorIndicesParameter.h"
 
 using namespace rfb;
-static LogWriter vlog("MonitorIndexParameter");
+static LogWriter vlog("MonitorIndicesParameter");
 
-MonitorIndexParameter::MonitorIndexParameter(const char* name_, const char* desc_, const char* v)
+MonitorIndicesParameter::MonitorIndicesParameter(const char* name_, const char* desc_, const char* v)
 : StringParameter(name_, desc_, v) {}
 
-void MonitorIndexParameter::get(std::set<int>& indices)
+void MonitorIndicesParameter::get(std::set<int>& indices)
 {
     int value = 0;
     int count = 0;
@@ -81,7 +80,7 @@ void MonitorIndexParameter::get(std::set<int>& indices)
 }
 
 
-bool MonitorIndexParameter::set(std::set<int>& indices)
+bool MonitorIndicesParameter::set(std::set<int>& indices)
 {
     static const int BUF_MAX_LEN = 1024;
     char buf[BUF_MAX_LEN] = {0};
@@ -121,7 +120,7 @@ bool MonitorIndexParameter::set(std::set<int>& indices)
     return StringParameter::setParam(buf);
 }
 
-void MonitorIndexParameter::get_monitors(std::vector<Monitor>& monitors)
+void MonitorIndicesParameter::get_monitors(std::vector<Monitor>& monitors)
 {
     // Start by creating a struct for every monitor.
     for (int i = 0; i < Fl::screen_count(); i++) {
@@ -144,10 +143,10 @@ void MonitorIndexParameter::get_monitors(std::vector<Monitor>& monitors)
     qsort(&monitors[0], monitors.size(), sizeof(*(&monitors[0])), sort_cb);
 }
 
-int MonitorIndexParameter::sort_cb(const void *a, const void *b)
+int MonitorIndicesParameter::sort_cb(const void *a, const void *b)
 {
-    MonitorIndexParameter::Monitor * monitor1 = (MonitorIndexParameter::Monitor *) a;
-    MonitorIndexParameter::Monitor * monitor2 = (MonitorIndexParameter::Monitor *) b;
+    MonitorIndicesParameter::Monitor * monitor1 = (MonitorIndicesParameter::Monitor *) a;
+    MonitorIndicesParameter::Monitor * monitor2 = (MonitorIndicesParameter::Monitor *) b;
 
     if (monitor1->x < monitor2->x) {
         return -1;

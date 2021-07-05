@@ -91,7 +91,7 @@ DesktopWindow::DesktopWindow(int w, int h, const char *name,
 
   viewport = new Viewport(w, h, serverPF, cc);
   monitors = new Monitors(); 
-  monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
+  // monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
   monitors->set_mode(fullScreenMode.getValueStr());
 
   // Position will be adjusted later
@@ -1319,7 +1319,7 @@ void DesktopWindow::handleOptions(void *data)
 {
   DesktopWindow *self = (DesktopWindow*)data;
   self->monitors->set_mode(fullScreenMode.getValueStr());
-  self->monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
+  // self->monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
 
   
 

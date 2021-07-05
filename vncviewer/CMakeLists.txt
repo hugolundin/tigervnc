@@ -19,7 +19,7 @@ set(VNCVIEWER_SOURCES
   touch.cxx
   Monitors.cxx
   MonitorArrangement.cxx
-  MonitorIndexParameter.cxx
+  MonitorIndicesParameter.cxx
   vncviewer.cxx)
 
 if(WIN32)

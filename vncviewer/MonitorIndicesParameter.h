@@ -20,13 +20,12 @@
 #define __MONITOR_INDEX_PARAMETER_H
 
 #include <set>
+#include <vector>
 #include <rfb/Configuration.h>
 
-using namespace rfb;
-
-class MonitorIndexParameter: public StringParameter {
+class MonitorIndicesParameter: public rfb::StringParameter {
 public:
-    MonitorIndexParameter(const char* name_, const char* desc_, const char* v);
+    MonitorIndicesParameter(const char* name_, const char* desc_, const char* v);
     void get(std::set<int>& indices);
     bool set(std::set<int>& indices);
 private:
