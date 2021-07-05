@@ -61,7 +61,7 @@ OptionsDialog::OptionsDialog()
   int x, y;
   Fl_Button *button;
   monitors = new Monitors();
-  monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
+  //monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
   monitors->set_mode("Selected");
 
   Fl_Tabs *tabs = new Fl_Tabs(OUTER_MARGIN, OUTER_MARGIN,
@@ -431,9 +431,9 @@ void OptionsDialog::storeOptions(void)
     fullScreenMode.setParam("Current");
   }
   
-  char buf[1024];
-  monitors->save(buf, 1024);
-  fullScreenSelectedMonitors.setParam(buf);
+  //char buf[1024];
+  //monitors->save(buf, 1024);
+  //fullScreenSelectedMonitors.setParam(buf);
 
   /* Misc. */
   shared.setParam(sharedCheckbox->value());

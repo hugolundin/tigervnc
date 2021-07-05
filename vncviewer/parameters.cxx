@@ -106,7 +106,7 @@ StringParameter fullScreenMode("FullScreenMode", "Full screen mode", "");
 BoolParameter fullScreenAllMonitors("FullScreenAllMonitors",
                                     "Enable full screen over all monitors",
                                     true);
-StringParameter fullScreenSelectedMonitors("FullScreenSelectedMonitors",
+MonitorIndicesParameter fullScreenSelectedMonitors("FullScreenSelectedMonitors",
                                          "Enable full screen over the given selected monitors",
                                          "1,2");
 StringParameter desktopSize("DesktopSize",
