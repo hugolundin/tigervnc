@@ -16,9 +16,12 @@
  * USA.
  */
 
+#include <set>
 #include <vector>
+#include <utility>
 #include <algorithm>
 
+#include <assert.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
@@ -26,73 +29,19 @@
 
 static const Fl_Boxtype FL_CHECKERED_BOX = FL_FREE_BOXTYPE;
 
-typedef struct {
-    unsigned int index;
-    MonitorArrangement *destination;
-} CallbackData;
-
 MonitorArrangement::MonitorArrangement(
-   int x, int y, int w, int h, MonitorArrangementDelegate *delegate
-): Fl_Group(x, y, w, h), m_monitors(), m_delegate(delegate),
+   int x, int y, int w, int h)
+:  Fl_Group(x, y, w, h),
    SELECTION_COLOR(fl_rgb_color(53, 132, 228)),
-   AVAILABLE_COLOR(fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR))))
+   AVAILABLE_COLOR(fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR)))),
+   m_monitors()
 {
-  box(FL_DOWN_BOX);
-  color(fl_lighter(FL_BACKGROUND_COLOR));
-
-  // Register a custom boxtype for the required monitor appearance.
+  // Used for required monitors. 
   Fl::set_boxtype(FL_CHECKERED_BOX, checkered_pattern_draw, 0, 0, 0, 0);
 
-  double s = scale();
-  int x_m, y_m, w_m, h_m, x_b, y_b;
-  x_m = y_m = w_m = h_m = x_b = y_b = 0;
-
-  // Some systems (macOS) may have monitors with negative coordinates. 
-  // We want to start drawing the GUI from (0, 0). Therefore, if we
-  // have a monitor with coordinates that is smaller, we need to add
-  // an offset to everything. 
-  for (int i = 0; i < m_delegate->count(); i++) {
-    m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
-
-    if (x_m < x_b) {
-      x_b = x_m;
-    }
-
-    if (y_m < y_b) {
-      y_b = y_m;
-    }
-  }
-
-  x_m = abs(x_m);
-  y_m = abs(y_m);
-  const double MARGIN_SCALE_FACTOR = 0.99;
-
-  // Build widgets for monitors.
-  for (int i = 0; i < m_delegate->count(); i++) {
-    m_delegate->dimensions(x_m, y_m, w_m, h_m, i);
-
-    Fl_Button *monitor = new Fl_Button(
-      /* x = */ x + offset_x() + x_b*s + x_m*s + (1 - MARGIN_SCALE_FACTOR)*x_m*s,
-      /* y = */ y + offset_y() + y_b*s + y_m*s + (1 - MARGIN_SCALE_FACTOR)*y_m*s,
-      /* w = */ w_m*s*MARGIN_SCALE_FACTOR,
-      /* h = */ h_m*s*MARGIN_SCALE_FACTOR
-    );
-
-    CallbackData *data = new CallbackData();
-    data->destination = this;
-    data->index = (unsigned int) i;
-
-    monitor->clear_visible_focus();
-    monitor->copy_tooltip(m_delegate->description(i));
-    monitor->callback(callback, data);
-    monitor->type(FL_TOGGLE_BUTTON);
-    monitor->when(FL_WHEN_CHANGED);
-    monitor->value(m_delegate->is_selected(i) ? 1 : 0);
-    style(monitor, i);
-
-    m_monitors.push_back(monitor);
-  }
-
+  box(FL_DOWN_BOX);
+  color(fl_lighter(FL_BACKGROUND_COLOR));
+  layout();
   end();
 }
 
@@ -101,20 +50,140 @@ MonitorArrangement::~MonitorArrangement()
 
 }
 
+std::set<int> MonitorArrangement::get()
+{
+  std::set<int> indices;
+
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    if (m_monitors[i]->value() == 1) {
+      indices.insert(i);
+    }
+  }
+
+  return indices;
+}
+
+void MonitorArrangement::set(std::set<int> indices)
+{
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    bool selected = std::find(indices.begin(), indices.end(), i) != indices.end();
+    m_monitors[i]->value(selected ? 1 : 0);
+  }
+}
+
 void MonitorArrangement::draw()
 {
-  for (int i = 0; i != m_delegate->count(); i++) {
-    style(i);
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    Fl_Button * monitor = m_monitors[i];
+
+    if (is_required(i)) {
+      monitor->box(FL_CHECKERED_BOX);
+      monitor->color(SELECTION_COLOR);
+    } else {
+      monitor->box(FL_BORDER_BOX);
+      monitor->color(AVAILABLE_COLOR);
+      monitor->selection_color(SELECTION_COLOR);
+    }
   }
 
   Fl_Group::draw();
 }
 
+void MonitorArrangement::layout()
+{
+  int x, y, w, h;
+  double scale = this->scale();
+  const double MARGIN_SCALE_FACTOR = 0.99;
+  std::pair<int, int> offset = this->offset();
+
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    Fl::screen_xywh(x, y, w, h, i);
+
+    Fl_Button *monitor = new Fl_Button(
+      /* x = */ this->x() + offset.first + x*scale + (1 - MARGIN_SCALE_FACTOR)*x*scale,
+      /* y = */ this->y() + offset.second +  y*scale + (1 - MARGIN_SCALE_FACTOR)*y*scale,
+      /* w = */ w*scale*MARGIN_SCALE_FACTOR,
+      /* h = */ h*scale*MARGIN_SCALE_FACTOR
+    );
+
+    monitor->clear_visible_focus();
+    // monitor->copy_tooltip(m_delegate->description(i));
+    monitor->callback(monitor_pressed, this);
+    monitor->type(FL_TOGGLE_BUTTON);
+    monitor->when(FL_WHEN_CHANGED);
+    m_monitors.push_back(monitor);
+  }
+}
+
+bool MonitorArrangement::is_required(int m)
+{
+  // A selected monitor is never required. 
+  if (m_monitors[m]->value() == 1) {
+    return false;
+  }
+
+  // If no monitors are selected, none are required.
+  std::set<int> selected = get();
+  if (selected.size() <= 0) {
+    return false;
+  }
+
+  // Go through all selected monitors and find the monitor 
+  // indices that bounds the fullscreen frame buffer. If
+  // the given monitor's coordinates are inside the bounds,
+  // while not being selected, it is instead required.
+
+  int x, y, w, h;
+  int top_y, bottom_y, left_x, right_x;
+  std::set<int>::iterator it = selected.begin();
+
+  // Base the rest of the calculations on the dimensions
+  // obtained for the first monitor.
+  Fl::screen_xywh(x, y, w, h, *it);
+  top_y = y;
+  bottom_y = y + h;
+  left_x = x;
+  right_x = x + w;
+
+  // Go through the rest of the monitors,
+  // exhausting the rest of the iterator.
+  for (; it != selected.end(); it++) {
+    Fl::screen_xywh(x, y, w, h, *it);
+
+    if (y < top_y) {
+      top_y = y;
+    }
+
+    if ((y + h) > bottom_y) {
+      bottom_y = y + h;
+    }
+
+    if (x < left_x) {
+      left_x = x;
+    }
+
+    if ((x + w) > right_x) {
+      right_x = x + w;
+    }
+  }
+
+  // Finally, get the dimensions of the monitor that we 
+  // are looking whether it is required. 
+  Fl::screen_xywh(x, y, w, h, m);
+
+  return inside(top_y, bottom_y, left_x, right_x, x, y) 
+      || inside(top_y, bottom_y, left_x, right_x, x+w, y)
+      || inside(top_y, bottom_y, left_x, right_x, x, y+h)
+      || inside(top_y, bottom_y, left_x, right_x, x+w, y+h);
+}
+
 double MonitorArrangement::scale()
 {
   const int MARGIN = 20;
-  double s_w = static_cast<double>(this->w()-MARGIN) / static_cast<double>(m_delegate->width());
-  double s_h = static_cast<double>(this->h()-MARGIN) / static_cast<double>(m_delegate->height());
+  std::pair<int, int> size = this->size();
+
+  double s_w = static_cast<double>(this->w()-MARGIN) / static_cast<double>(size.first);
+  double s_h = static_cast<double>(this->h()-MARGIN) / static_cast<double>(size.second);
 
   // Choose the one that scales the least, in order to
   // maximize our use of the given bounding area.
@@ -125,43 +194,89 @@ double MonitorArrangement::scale()
   }
 }
 
-int MonitorArrangement::offset_x()
+std::pair<int, int> MonitorArrangement::size()
 {
-  return (this->w()/2) - (m_delegate->width()/2 * scale());
-}
+  int x, y, w, h;
+  int top, bottom, left, right;
+  int x_min, x_max, y_min, y_max;
+  x_min = x_max = y_min = y_max = 0;
 
-int MonitorArrangement::offset_y()
-{
-  return (this->h()/2) - (m_delegate->height()/2 * scale());
-}
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    Fl::screen_xywh(x, y, w, h, i);
+    
+    top = y;
+    bottom = y + h;
+    left = x;
+    right = x + w;
+    
+    if (top < y_min) {
+      y_min = top;
+    }
 
-void MonitorArrangement::style(int i)
-{
-  style(m_monitors[i], i);
-}
+    if (bottom > y_max) {
+      y_max = bottom;
+    }
 
-void MonitorArrangement::style(Fl_Button *monitor, int i)
-{
-  if (m_delegate->is_required(i)) {
-    monitor->box(FL_CHECKERED_BOX);
-    monitor->color(SELECTION_COLOR);
-  } else {
-    monitor->box(FL_BORDER_BOX);
-    monitor->color(AVAILABLE_COLOR);
-    monitor->selection_color(SELECTION_COLOR);
+    if (left < x_min) {
+      x_min = left;
+    }
+
+    if (right > x_max) {
+      x_max = right;
+    }
   }
+  
+  return std::make_pair(x_max - x_min, y_max - y_min);
 }
 
-void MonitorArrangement::notify(int i)
+std::pair<int, int> MonitorArrangement::offset()
 {
-  m_delegate->set(i, m_monitors[i]->value() == 1);
-  redraw();
+  double scale = this->scale();
+  std::pair<int, int> size = this->size();
+  std::pair<int, int> origin = this->origin();
+
+  int offset_x = (this->w()/2) - (size.first/2 * scale);
+  int offset_y = (this->h()/2) - (size.second/2 * scale);
+
+  return std::make_pair(offset_x + abs(origin.first), offset_y + abs(origin.second));
 }
 
-void MonitorArrangement::callback(Fl_Widget *, void *data)
+std::pair<int, int> MonitorArrangement::origin()
 {
-  CallbackData *cbd = (CallbackData *)data;
-  cbd->destination->notify(cbd->index);
+  int x, y, w, h, ox, oy;
+  ox = oy = 0;
+
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    Fl::screen_xywh(x, y, w, h, i);
+
+    if (x < ox) {
+      ox = x;
+    }
+
+    if (y < oy) {
+      oy = y;
+    }
+  }
+
+  return std::make_pair(ox, oy);
+}
+
+bool MonitorArrangement::inside(
+  int top_y, int bottom_y, int left_x, int right_x, int x, int y)
+{
+  return (x > left_x) && (x < right_x) && (y > top_y) && (y < bottom_y);
+}
+
+void MonitorArrangement::monitor_pressed(Fl_Widget *widget, void *user_data)
+{
+  MonitorArrangement *self = (MonitorArrangement *) user_data;
+
+  // When a monitor is selected, FLTK changes the state of it for us. 
+  // However, selecting a monitor might implicitly change the state of
+  // others (if they become required). FLTK only redraws the selected
+  // monitor. Therefore, we must trigger a redraw of the whole widget
+  // manually. 
+  self->redraw();
 }
 
 void MonitorArrangement::checkered_pattern_draw(

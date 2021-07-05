@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 
+#include <algorithm>
 #include <list>
 
 #include <rdr/types.h>
@@ -38,7 +39,7 @@
 #include "i18n.h"
 #include "menukey.h"
 #include "parameters.h"
-#include "Monitors.h"
+#include "MonitorArrangement.h"
 
 #include <FL/Fl_Tabs.H>
 #include <FL/Fl_Button.H>
@@ -56,13 +57,10 @@ using namespace rfb;
 std::map<OptionsCallback*, void*> OptionsDialog::callbacks;
 
 OptionsDialog::OptionsDialog()
-  : Fl_Window(450, 450, _("VNC Viewer: Connection Options")), monitors(NULL)
+  : Fl_Window(450, 450, _("VNC Viewer: Connection Options"))
 {
   int x, y;
   Fl_Button *button;
-  monitors = new Monitors();
-  //monitors->set_indices(fullScreenSelectedMonitors.getValueStr());
-  monitors->set_mode("Selected");
 
   Fl_Tabs *tabs = new Fl_Tabs(OUTER_MARGIN, OUTER_MARGIN,
                              w() - OUTER_MARGIN*2,
@@ -101,7 +99,7 @@ OptionsDialog::OptionsDialog()
 
 OptionsDialog::~OptionsDialog()
 {
-  delete monitors;
+
 }
 
 
@@ -313,6 +311,8 @@ void OptionsDialog::loadOptions(void)
     currentMonitorButton->setonly();
   }
 
+  monitorArrangement->set(fullScreenSelectedMonitors.get());
+
   handleDesktopSize(desktopSizeCheckbox, this);
   handleFullScreenMode(selectedMonitorsButton, this);
 
@@ -430,11 +430,8 @@ void OptionsDialog::storeOptions(void)
   } else {
     fullScreenMode.setParam("Current");
   }
+  fullScreenSelectedMonitors.set(monitorArrangement->get());
   
-  //char buf[1024];
-  //monitors->save(buf, 1024);
-  //fullScreenSelectedMonitors.setParam(buf);
-
   /* Misc. */
   shared.setParam(sharedCheckbox->value());
   dotWhenNoCursor.setParam(dotCursorCheckbox->value());
@@ -856,8 +853,7 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
                               tx + INDENT,
                               ty,
                               margin_width,
-                              margin_height,
-                              monitors);
+                              margin_height);
 
     ty += CHECK_HEIGHT + margin_height;
   }

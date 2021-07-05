@@ -26,15 +26,15 @@
 class MonitorIndicesParameter: public rfb::StringParameter {
 public:
     MonitorIndicesParameter(const char* name_, const char* desc_, const char* v);
-    void get(std::set<int>& indices);
-    bool set(std::set<int>& indices);
+    std::set<int> get();
+    bool set(std::set<int> indices);
 private:
     typedef struct {
         int x, y, w, h;
         int fltk_index;
     } Monitor;
 
-    void get_monitors(std::vector<Monitor>& monitors);
+    std::vector<MonitorIndicesParameter::Monitor> monitors();
     static int sort_cb(const void*, const void*);
 };
 

@@ -30,7 +30,6 @@ class Fl_Round_Button;
 class Fl_Input;
 class Fl_Int_Input;
 class Fl_Choice;
-class Monitors;
 class MonitorArrangement;
 
 typedef void (OptionsCallback)(void*);
@@ -135,7 +134,6 @@ protected:
   Fl_Round_Button *currentMonitorButton;
   Fl_Round_Button *allMonitorsButton;
   Fl_Round_Button *selectedMonitorsButton;
-  Monitors *monitors;
   MonitorArrangement *monitorArrangement;
 
   /* Misc. */

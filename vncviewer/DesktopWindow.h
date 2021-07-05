@@ -26,7 +26,6 @@
 
 #include <rfb/Rect.h>
 #include <rfb/Pixel.h>
-#include "Monitors.h"
 #include <FL/Fl_Window.H>
 
 namespace rfb { class ModifiablePixelBuffer; }
@@ -150,7 +149,6 @@ private:
   unsigned statsLastPosition;
 
   Surface *statsGraph;
-  Monitors *monitors;
 };
 
 #endif
