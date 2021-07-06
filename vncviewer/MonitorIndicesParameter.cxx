@@ -80,6 +80,11 @@ std::set<int> MonitorIndicesParameter::getParam()
     return indices;
 }
 
+bool MonitorIndicesParameter::setParam(const char* value)
+{
+    return StringParameter::setParam(value);
+}
+
 
 bool MonitorIndicesParameter::setParam(std::set<int> indices)
 {

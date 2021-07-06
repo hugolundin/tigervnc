@@ -28,6 +28,7 @@ public:
     MonitorIndicesParameter(const char* name_, const char* desc_, const char* v);
     std::set<int> getParam();
     bool setParam(std::set<int> indices);
+    bool setParam(const char* value);
 private:
     typedef struct {
         int x, y, w, h;
