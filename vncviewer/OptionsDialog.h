@@ -130,7 +130,6 @@ protected:
   Fl_Check_Button *remoteResizeCheckbox;
   Fl_Check_Button *fullScreenCheckbox;
 
-  Fl_Group *fullScreenModeGroup;
   Fl_Round_Button *currentMonitorButton;
   Fl_Round_Button *allMonitorsButton;
   Fl_Round_Button *selectedMonitorsButton;

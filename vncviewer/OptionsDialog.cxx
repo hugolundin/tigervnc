@@ -811,7 +811,7 @@ void OptionsDialog::createScreenPage(int tx, int ty, int tw, int th)
 
   width = tw - OUTER_MARGIN * 2;
   height = th - ty + OUTER_MARGIN * 3;
-  fullScreenModeGroup = new Fl_Group(tx,
+    Fl_Group *fullScreenModeGroup = new Fl_Group(tx,
                                      ty,
                                      width,
                                      height);
