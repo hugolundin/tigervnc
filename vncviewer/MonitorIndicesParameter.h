@@ -26,8 +26,8 @@
 class MonitorIndicesParameter: public rfb::StringParameter {
 public:
     MonitorIndicesParameter(const char* name_, const char* desc_, const char* v);
-    std::set<int> get();
-    bool set(std::set<int> indices);
+    std::set<int> getParam();
+    bool setParam(std::set<int> indices);
 private:
     typedef struct {
         int x, y, w, h;

@@ -31,7 +31,7 @@ static LogWriter vlog("MonitorIndicesParameter");
 MonitorIndicesParameter::MonitorIndicesParameter(const char* name_, const char* desc_, const char* v)
 : StringParameter(name_, desc_, v) {}
 
-std::set<int> MonitorIndicesParameter::get()
+std::set<int> MonitorIndicesParameter::getParam()
 {
     int value = 0;
     int count = 0;
@@ -81,7 +81,7 @@ std::set<int> MonitorIndicesParameter::get()
 }
 
 
-bool MonitorIndicesParameter::set(std::set<int> indices)
+bool MonitorIndicesParameter::setParam(std::set<int> indices)
 {
     static const int BUF_MAX_LEN = 1024;
     char buf[BUF_MAX_LEN] = {0};

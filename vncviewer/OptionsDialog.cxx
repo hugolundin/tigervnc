@@ -310,7 +310,7 @@ void OptionsDialog::loadOptions(void)
     currentMonitorButton->setonly();
   }
 
-  monitorArrangement->set(fullScreenSelectedMonitors.get());
+  monitorArrangement->set(fullScreenSelectedMonitors.getParam());
 
   handleDesktopSize(desktopSizeCheckbox, this);
   handleFullScreenMode(selectedMonitorsButton, this);
@@ -429,7 +429,7 @@ void OptionsDialog::storeOptions(void)
   } else {
     fullScreenMode.setParam("Current");
   }
-  fullScreenSelectedMonitors.set(monitorArrangement->get());
+  fullScreenSelectedMonitors.setParam(monitorArrangement->get());
   
   /* Misc. */
   shared.setParam(sharedCheckbox->value());

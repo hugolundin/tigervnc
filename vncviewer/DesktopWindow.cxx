@@ -859,7 +859,7 @@ int DesktopWindow::fltkHandle(int event, Fl_Window *win)
 void DesktopWindow::fullscreen_on()
 {
   int top, bottom, left, right;
-  std::set<int> selected = fullScreenSelectedMonitors.get();
+  std::set<int> selected = fullScreenSelectedMonitors.getParam();
 
   // If there are monitors selected, calculate the dimensions
   // of the frame buffer, expressed in the monitor indices that
