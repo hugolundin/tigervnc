@@ -55,8 +55,6 @@ endif()
 
 target_link_libraries(vncviewer rfb network rdr os ${FLTK_LIBRARIES} ${GETTEXT_LIBRARIES})
 
-
-
 if(WIN32)
   target_link_libraries(vncviewer msimg32)
 elseif(APPLE)

@@ -484,7 +484,6 @@ void DesktopWindow::draw()
     ow = overlay->width();
     oh = overlay->height();
 
-
     fl_clip_box(ox, oy, ow, oh, ox, oy, ow, oh);
 
     if ((ow != 0) && (oh != 0)) {

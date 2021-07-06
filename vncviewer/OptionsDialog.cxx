@@ -98,7 +98,6 @@ OptionsDialog::OptionsDialog()
 
 OptionsDialog::~OptionsDialog()
 {
-
 }
 
 
@@ -299,7 +298,6 @@ void OptionsDialog::loadOptions(void)
     desktopHeightInput->value(buf);
   }
   remoteResizeCheckbox->value(remoteResize);
-
   fullScreenCheckbox->value(fullScreen);
 
   if (!strcasecmp(fullScreenMode, "all")) {
