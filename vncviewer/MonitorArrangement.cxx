@@ -66,10 +66,9 @@ std::set<int> MonitorArrangement::get()
 {
   std::set<int> indices;
 
-  for (int i = 0; i < Fl::screen_count(); i++) {
-    if (m_monitors[i]->value() == 1) {
+  for (int i = 0; i < (int) m_monitors.size(); i++) {
+    if (m_monitors[i]->value() == 1)
       indices.insert(i);
-    }
   }
 
   return indices;
@@ -77,7 +76,7 @@ std::set<int> MonitorArrangement::get()
 
 void MonitorArrangement::set(std::set<int> indices)
 {
-  for (int i = 0; i < Fl::screen_count(); i++) {
+  for (int i = 0; i < (int) m_monitors.size(); i++) {
     bool selected = std::find(indices.begin(), indices.end(), i) != indices.end();
     m_monitors[i]->value(selected ? 1 : 0);
   }
@@ -85,7 +84,7 @@ void MonitorArrangement::set(std::set<int> indices)
 
 void MonitorArrangement::draw()
 {
-  for (int i = 0; i < Fl::screen_count(); i++) {
+  for (int i = 0; i < (int) m_monitors.size(); i++) {
     Fl_Button * monitor = m_monitors[i];
 
     if (is_required(i)) {
@@ -125,9 +124,8 @@ void MonitorArrangement::layout()
     m_monitors.push_back(monitor);
   }
 
-  for (int i = 0; i < Fl::screen_count(); i++) {
+  for (int i = 0; i < (int) m_monitors.size(); i++)
     m_monitors[i]->copy_tooltip(description(i).c_str());
-  }
 }
 
 bool MonitorArrangement::is_required(int m)
@@ -356,11 +354,10 @@ std::string MonitorArrangement::name(int m)
   // Show resolution and position in parenthesis.
   ss << " (" << w << "x" << h << "+" << x << "+" << y << ")";
 #endif
-
 #elif defined(WIN32)
-
+  // FIXME: Add support for showing the monitor name on Windows. 
 #elif defined(__APPLE__)
-
+  // FIXME: Add support for showing the monitor name on macOS. 
 #endif
 
   return ss.str();
