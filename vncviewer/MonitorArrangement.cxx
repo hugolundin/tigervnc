@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <algorithm>
 
-#ifdef HAVE_XRANDR
+#if defined(HAVE_XRANDR) && !defined(__APPLE__)
 #include <X11/extensions/Xrandr.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -284,7 +284,7 @@ std::string MonitorArrangement::description(int m)
     Fl::screen_xywh(x, y, w, h, m);
 
     // Fallback to showing resolution and position of monitor.
-    ss << w << "x" << h << "+" << x << "+" << y;
+    ss << w << "x" << h;
   }
 
   return ss.str();
@@ -298,9 +298,12 @@ std::string MonitorArrangement::name(int m)
   std::stringstream ss;
   Fl::screen_xywh(x, y, w, h, m);
 
-#if !defined(WIN32) && !defined(__APPLE__)
+#if defined(WIN32)
+  // FIXME: Add support for showing the monitor name on Windows. 
+#elif defined(__APPLE__)
+  // FIXME: Add support for showing the monitor name on macOS.
+#else
 #ifdef HAVE_XRANDR
-
   int ev, err, xi_major;
   fl_open_display();
   assert(fl_display != NULL);
@@ -343,12 +346,8 @@ std::string MonitorArrangement::name(int m)
   }
 
   // Show resolution and position in parenthesis.
-  ss << " (" << w << "x" << h << "+" << x << "+" << y << ")";
+  ss << " (" << w << "x" << h << ")";
 #endif
-#elif defined(WIN32)
-  // FIXME: Add support for showing the monitor name on Windows. 
-#elif defined(__APPLE__)
-  // FIXME: Add support for showing the monitor name on macOS. 
 #endif
 
   return ss.str();
