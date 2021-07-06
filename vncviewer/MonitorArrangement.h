@@ -19,6 +19,8 @@
 #ifndef __MONITOR_ARRANGEMENT_H__
 #define __MONITOR_ARRANGEMENT_H__
 
+#include <string>
+
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Group.H>
 
@@ -47,7 +49,7 @@ private:
   // Return true if the given monitor is required to be part of the configuration
   // for it to be valid. A configuration is only valid if the framebuffer created
   // from is rectangular.
-  bool is_required(int i);
+  bool is_required(int m);
 
   // Calculate the scale of the monitor arrangement. 
   double scale();
@@ -71,6 +73,12 @@ private:
   //   +-----bottom_y-----+
   //
   bool inside(int top_y, int bottom_y, int left_x, int right_x, int x, int y);
+
+  // Get a textual description of the given monitor.
+  std::string description(int m);
+
+  // Get the platform specific name of the given monitor.
+  std::string name(int m);
 
   static void monitor_pressed(Fl_Widget *widget, void *user_data);
   

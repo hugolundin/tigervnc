@@ -18,15 +18,27 @@
 
 #include <set>
 #include <vector>
+#include <string>
 #include <utility>
+#include <sstream>
+#include <assert.h>
 #include <algorithm>
 
-#include <assert.h>
+#ifdef HAVE_XRANDR
+#include <X11/extensions/Xrandr.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#endif
+
+#include <rfb/LogWriter.h>
+#include <rfb/CMsgWriter.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
 
 #include "MonitorArrangement.h"
 
+static rfb::LogWriter vlog("MonitorArrangement");
 static const Fl_Boxtype FL_CHECKERED_BOX = FL_FREE_BOXTYPE;
 
 MonitorArrangement::MonitorArrangement(
@@ -107,11 +119,14 @@ void MonitorArrangement::layout()
     );
 
     monitor->clear_visible_focus();
-    // monitor->copy_tooltip(m_delegate->description(i));
     monitor->callback(monitor_pressed, this);
     monitor->type(FL_TOGGLE_BUTTON);
     monitor->when(FL_WHEN_CHANGED);
     m_monitors.push_back(monitor);
+  }
+
+  for (int i = 0; i < Fl::screen_count(); i++) {
+    m_monitors[i]->copy_tooltip(description(i).c_str());
   }
 }
 
@@ -265,6 +280,90 @@ bool MonitorArrangement::inside(
   int top_y, int bottom_y, int left_x, int right_x, int x, int y)
 {
   return (x > left_x) && (x < right_x) && (y > top_y) && (y < bottom_y);
+}
+
+std::string MonitorArrangement::description(int m)
+{
+  std::stringstream ss;
+  assert(m < (int) m_monitors.size());
+
+  // Get the platform specific name of the monitor. 
+  ss << name(m);
+
+  if (ss.str().empty()) {
+    int x, y, w, h;
+    Fl::screen_xywh(x, y, w, h, m);
+
+    // Fallback to showing resolution and position of monitor.
+    ss << w << "x" << h << "+" << x << "+" << y;
+  }
+
+  return ss.str();
+}
+
+std::string MonitorArrangement::name(int m)
+{
+  assert(m < (int) m_monitors.size());
+
+  int x, y, w, h;
+  std::stringstream ss;
+  Fl::screen_xywh(x, y, w, h, m);
+
+#if !defined(WIN32) && !defined(__APPLE__)
+#ifdef HAVE_XRANDR
+
+  int ev, err, xi_major;
+  fl_open_display();
+  assert(fl_display != NULL);
+
+  if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
+    vlog.info("Unable to find X11 RANDR extension.");
+    return std::string();
+  }
+
+  XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
+  if (!res) {
+    vlog.error("Unable to get XRRScreenResources for fl_display.");
+    return std::string();
+  }
+
+  for (int i = 0; i < res->ncrtc; i++) {
+    XRRCrtcInfo *crtc = XRRGetCrtcInfo(fl_display, res, res->crtcs[i]);
+
+    if (!crtc) {
+      vlog.error("Unable to get XRRCrtcInfo for crtc %d.", i);
+      continue;
+    }
+
+    for (int j = 0; j < crtc->noutput; j++) {
+      bool monitor_found = (crtc->x == x) &&
+          (crtc->y == y) &&
+          (crtc->width == ((unsigned int) w)) &&
+          (crtc->height == ((unsigned int) h));
+
+      if (monitor_found) {
+        XRROutputInfo *output = XRRGetOutputInfo(fl_display, res, crtc->outputs[j]);
+        if (!output) {
+          vlog.error("Unable to get XRROutputInfo for crtc %d, output %d.", i, j);
+          continue;
+        }
+
+        ss << output->name;
+      }
+    }
+  }
+
+  // Show resolution and position in parenthesis.
+  ss << " (" << w << "x" << h << "+" << x << "+" << y << ")";
+#endif
+
+#elif defined(WIN32)
+
+#elif defined(__APPLE__)
+
+#endif
+
+  return ss.str();
 }
 
 void MonitorArrangement::monitor_pressed(Fl_Widget *widget, void *user_data)
