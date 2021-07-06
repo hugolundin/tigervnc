@@ -73,9 +73,8 @@ std::set<int> MonitorIndicesParameter::get()
 
     // Go through the monitors and see what indices are present in the config.
     for (int i = 0; i < ((int) monitors.size()); i++) {
-        if (std::find(config_indices.begin(), config_indices.end(), i) != config_indices.end()) {
+        if (std::find(config_indices.begin(), config_indices.end(), i) != config_indices.end())
             indices.insert(monitors[i].fltk_index);
-        }
     }
 
     return indices;
@@ -95,9 +94,8 @@ bool MonitorIndicesParameter::set(std::set<int> indices)
     }
 
     for (int i = 0; i < ((int) monitors.size()); i++) {
-        if (std::find(indices.begin(), indices.end(), monitors[i].fltk_index) != indices.end()) {
+        if (std::find(indices.begin(), indices.end(), monitors[i].fltk_index) != indices.end())
             config_indices.insert(i);
-        }
     }
 
     int bytes_written = 0;
@@ -152,18 +150,15 @@ int MonitorIndicesParameter::sort_cb(const void *a, const void *b)
     MonitorIndicesParameter::Monitor * monitor1 = (MonitorIndicesParameter::Monitor *) a;
     MonitorIndicesParameter::Monitor * monitor2 = (MonitorIndicesParameter::Monitor *) b;
 
-    if (monitor1->x < monitor2->x) {
+    if (monitor1->x < monitor2->x)
         return -1;
-    }
 
     if (monitor1->x == monitor2->x) {
-        if (monitor1->y < monitor2->y) {
+        if (monitor1->y < monitor2->y)
             return -1;
-        }
 
-        if (monitor1->y == monitor2->y) {
+        if (monitor1->y == monitor2->y)
             return 0;
-        }
     }
 
     return 1;  

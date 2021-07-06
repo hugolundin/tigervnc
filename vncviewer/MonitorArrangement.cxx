@@ -131,15 +131,14 @@ void MonitorArrangement::layout()
 bool MonitorArrangement::is_required(int m)
 {
   // A selected monitor is never required. 
-  if (m_monitors[m]->value() == 1) {
+  if (m_monitors[m]->value() == 1)
     return false;
-  }
 
   // If no monitors are selected, none are required.
   std::set<int> selected = get();
-  if (selected.size() <= 0) {
+  if (selected.size() <= 0)
     return false;
-  }
+
 
   // Go through all selected monitors and find the monitor 
   // indices that bounds the fullscreen frame buffer. If
@@ -200,11 +199,10 @@ double MonitorArrangement::scale()
 
   // Choose the one that scales the least, in order to
   // maximize our use of the given bounding area.
-  if (s_w > s_h) {
+  if (s_w > s_h)
     return s_h;
-  } else {
+  else
     return s_w;
-  }
 }
 
 std::pair<int, int> MonitorArrangement::size()
@@ -222,21 +220,17 @@ std::pair<int, int> MonitorArrangement::size()
     left = x;
     right = x + w;
     
-    if (top < y_min) {
+    if (top < y_min)
       y_min = top;
-    }
 
-    if (bottom > y_max) {
+    if (bottom > y_max)
       y_max = bottom;
-    }
 
-    if (left < x_min) {
+    if (left < x_min)
       x_min = left;
-    }
 
-    if (right > x_max) {
+    if (right > x_max)
       x_max = right;
-    }
   }
   
   return std::make_pair(x_max - x_min, y_max - y_min);
@@ -262,13 +256,11 @@ std::pair<int, int> MonitorArrangement::origin()
   for (int i = 0; i < Fl::screen_count(); i++) {
     Fl::screen_xywh(x, y, w, h, i);
 
-    if (x < ox) {
+    if (x < ox)
       ox = x;
-    }
 
-    if (y < oy) {
+    if (y < oy)
       oy = y;
-    }
   }
 
   return std::make_pair(ox, oy);
