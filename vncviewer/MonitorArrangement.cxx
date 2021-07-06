@@ -244,7 +244,7 @@ std::pair<int, int> MonitorArrangement::offset()
   int offset_x = (this->w()/2) - (size.first/2 * scale);
   int offset_y = (this->h()/2) - (size.second/2 * scale);
 
-  return std::make_pair(offset_x + abs(origin.first), offset_y + abs(origin.second));
+  return std::make_pair(offset_x + abs(origin.first)*scale, offset_y + abs(origin.second)*scale);
 }
 
 std::pair<int, int> MonitorArrangement::origin()

@@ -82,6 +82,7 @@ std::set<int> MonitorIndicesParameter::getParam()
 
 bool MonitorIndicesParameter::setParam(const char* value)
 {
+    // TODO: Validate value.
     return StringParameter::setParam(value);
 }
 
@@ -121,7 +122,7 @@ bool MonitorIndicesParameter::setParam(std::set<int> indices)
         separator = ",";
     }
 
-    return StringParameter::setParam(buf);
+    return setParam(buf);
 }
 
 std::vector<MonitorIndicesParameter::Monitor> MonitorIndicesParameter::monitors()
