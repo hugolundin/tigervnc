@@ -509,6 +509,29 @@ void loadHistoryFromRegKey(vector<string>& serverHistory) {
   }
 }
 
+static void findAndSetViewerParametersFromReg(VoidParameter* parameters[], size_t parameters_len, HKEY* hKey) {
+  
+  const size_t buffersize = 256;
+  int intValue = 0;
+  char stringValue[buffersize];
+  
+  for (size_t i = 0; i < parameters_len/sizeof(VoidParameter*); i++) {
+    if (dynamic_cast<StringParameter*>(parameters[i]) != NULL) {
+      if (getKeyString(parameters[i]->getName(), stringValue, buffersize, hKey))
+        parameters[i]->setParam(stringValue);
+    } else if (dynamic_cast<IntParameter*>(parameters[i]) != NULL) {
+      if (getKeyInt(parameters[i]->getName(), &intValue, hKey))
+        ((IntParameter*)parameters[i])->setParam(intValue);
+    } else if (dynamic_cast<BoolParameter*>(parameters[i]) != NULL) {
+      if (getKeyInt(parameters[i]->getName(), &intValue, hKey))
+        ((BoolParameter*)parameters[i])->setParam(intValue);
+    } else {      
+      vlog.error(_("Unknown parameter type for parameter %s"),
+                 parameters[i]->getName());
+    }
+  }
+}
+
 static char* loadFromReg() {
 
   HKEY hKey;
@@ -532,24 +555,8 @@ static char* loadFromReg() {
   if (getKeyString("ServerName", servernameBuffer, buffersize, &hKey))
     snprintf(servername, buffersize, "%s", servernameBuffer);
   
-  int intValue = 0;
-  char stringValue[buffersize];
-  
-  for (size_t i = 0; i < sizeof(parameterArray)/sizeof(VoidParameter*); i++) {
-    if (dynamic_cast<StringParameter*>(parameterArray[i]) != NULL) {
-      if (getKeyString(parameterArray[i]->getName(), stringValue, buffersize, &hKey))
-        parameterArray[i]->setParam(stringValue);
-    } else if (dynamic_cast<IntParameter*>(parameterArray[i]) != NULL) {
-      if (getKeyInt(parameterArray[i]->getName(), &intValue, &hKey))
-        ((IntParameter*)parameterArray[i])->setParam(intValue);
-    } else if (dynamic_cast<BoolParameter*>(parameterArray[i]) != NULL) {
-      if (getKeyInt(parameterArray[i]->getName(), &intValue, &hKey))
-        ((BoolParameter*)parameterArray[i])->setParam(intValue);
-    } else {      
-      vlog.error(_("Unknown parameter type for parameter %s"),
-                 parameterArray[i]->getName());
-    }
-  }
+  findAndSetViewerParametersFromReg(parameterArray, sizeof(parameterArray), &hKey);
+  findAndSetViewerParametersFromReg(readOnlyParameterArray, sizeof(readOnlyParameterArray), &hKey);
 
   res = RegCloseKey(hKey);
   if (res != ERROR_SUCCESS){
@@ -616,7 +623,7 @@ void saveViewerParameters(const char *filename, const char *servername) {
   fclose(f);
 }
 
-static bool findAndSetViewerParameter(
+static bool findAndSetViewerParameterFromValue(
   VoidParameter* parameters[], size_t parameters_len,
   char* value, char* line, int lineNr, char* filepath)
 {
@@ -756,8 +763,8 @@ char* loadViewerParameters(const char *filename) {
       invalidParameterName = false;
 
     } else {
-      invalidParameterName = findAndSetViewerParameter(parameterArray, sizeof(parameterArray), value, line, lineNr, filepath)
-        && findAndSetViewerParameter(readOnlyParameterArray, sizeof(readOnlyParameterArray), value, line, lineNr, filepath);
+      invalidParameterName = findAndSetViewerParameterFromValue(parameterArray, sizeof(parameterArray), value, line, lineNr, filepath)
+        && findAndSetViewerParameterFromValue(readOnlyParameterArray, sizeof(readOnlyParameterArray), value, line, lineNr, filepath);
     }
 
     if (invalidParameterName)
