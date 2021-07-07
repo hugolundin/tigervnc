@@ -180,7 +180,6 @@ static VoidParameter* parameterArray[] = {
   &qualityLevel,
   &fullScreen,
   &fullScreenMode,
-  &fullScreenAllMonitors,
   &fullScreenSelectedMonitors,
   &desktopSize,
   &remoteResize,
@@ -194,6 +193,10 @@ static VoidParameter* parameterArray[] = {
 #endif
   &menuKey,
   &fullscreenSystemKeys
+};
+
+static VoidParameter* readOnlyParameterArray[] = {
+  &fullScreenAllMonitors
 };
 
 // Encoding Table
@@ -613,6 +616,48 @@ void saveViewerParameters(const char *filename, const char *servername) {
   fclose(f);
 }
 
+static bool findAndSetViewerParameter(
+  VoidParameter* parameters[], size_t parameters_len,
+  char* value, char* line, int lineNr, char* filepath)
+{
+  const size_t buffersize = 256;
+  char decodingBuffer[buffersize];
+
+  // Find and set the correct parameter
+  for (size_t i = 0; i < parameters_len/sizeof(VoidParameter*); i++) {
+
+    if (dynamic_cast<StringParameter*>(parameters[i]) != NULL) {
+      if (strcasecmp(line, ((StringParameter*)parameters[i])->getName()) == 0) {
+
+        if(!decodeValue(value, decodingBuffer, sizeof(decodingBuffer))) {
+          vlog.error(_("Failed to read line %d in file %s: %s"),
+                      lineNr, filepath, _("Invalid format or too large value"));
+          continue;
+        }
+        ((StringParameter*)parameters[i])->setParam(decodingBuffer);
+        return false;
+      }
+
+    } else if (dynamic_cast<IntParameter*>(parameters[i]) != NULL) {
+      if (strcasecmp(line, ((IntParameter*)parameters[i])->getName()) == 0) {
+        ((IntParameter*)parameters[i])->setParam(atoi(value));
+        return false;
+      }
+
+    } else if (dynamic_cast<BoolParameter*>(parameters[i]) != NULL) {
+      if (strcasecmp(line, ((BoolParameter*)parameters[i])->getName()) == 0) {
+        ((BoolParameter*)parameters[i])->setParam(atoi(value));
+        return false;
+      }
+
+    } else {
+      vlog.error(_("Unknown parameter type for parameter %s"),
+                  parameters[i]->getName());
+    }
+  }
+
+  return true;
+}
 
 char* loadViewerParameters(const char *filename) {
 
@@ -711,39 +756,8 @@ char* loadViewerParameters(const char *filename) {
       invalidParameterName = false;
 
     } else {
-
-      // Find and set the correct parameter
-      for (size_t i = 0; i < sizeof(parameterArray)/sizeof(VoidParameter*); i++) {
-
-        if (dynamic_cast<StringParameter*>(parameterArray[i]) != NULL) {
-          if (strcasecmp(line, ((StringParameter*)parameterArray[i])->getName()) == 0) {
-
-            if(!decodeValue(value, decodingBuffer, sizeof(decodingBuffer))) {
-              vlog.error(_("Failed to read line %d in file %s: %s"),
-                         lineNr, filepath, _("Invalid format or too large value"));
-              continue;
-            }
-            ((StringParameter*)parameterArray[i])->setParam(decodingBuffer);
-            invalidParameterName = false;
-          }
-
-        } else if (dynamic_cast<IntParameter*>(parameterArray[i]) != NULL) {
-          if (strcasecmp(line, ((IntParameter*)parameterArray[i])->getName()) == 0) {
-            ((IntParameter*)parameterArray[i])->setParam(atoi(value));
-            invalidParameterName = false;
-          }
-
-        } else if (dynamic_cast<BoolParameter*>(parameterArray[i]) != NULL) {
-          if (strcasecmp(line, ((BoolParameter*)parameterArray[i])->getName()) == 0) {
-            ((BoolParameter*)parameterArray[i])->setParam(atoi(value));
-            invalidParameterName = false;
-          }
-
-        } else {
-          vlog.error(_("Unknown parameter type for parameter %s"),
-                     parameterArray[i]->getName());
-        }
-      }
+      invalidParameterName = findAndSetViewerParameter(parameterArray, sizeof(parameterArray), value, line, lineNr, filepath)
+        && findAndSetViewerParameter(readOnlyParameterArray, sizeof(readOnlyParameterArray), value, line, lineNr, filepath);
     }
 
     if (invalidParameterName)
