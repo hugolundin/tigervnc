@@ -464,8 +464,7 @@ void DesktopWindow::draw()
     int sx, sy, sw, sh;
 
     bool multiple_monitors = !strcasecmp(fullScreenMode, "selected")
-                          || !strcasecmp(fullScreenMode, "all")
-                          || fullScreenAllMonitors;
+                          || !strcasecmp(fullScreenMode, "all");
 
     // Make sure it's properly seen by adjusting it relative to the
     // primary screen rather than the entire window
@@ -960,8 +959,10 @@ void DesktopWindow::grabKeyboard()
   }
 #elif defined(__APPLE__)
   int ret;
+
+  bool all_monitors = !strcasecmp(fullScreenMode, "all");
   
-  ret = cocoa_capture_display(this, fullScreenAllMonitors);
+  ret = cocoa_capture_display(this, all_monitors);
   if (ret != 0) {
     vlog.error(_("Failure grabbing keyboard"));
     return;
@@ -1376,7 +1377,7 @@ void DesktopWindow::handleOptions(void *data)
     self->ungrabKeyboard();
 
   // Call fullscreen_on even if active since it handles
-  // fullScreenAllMonitors
+  // fullScreenMode
   if (fullScreen)
     self->fullscreen_on();
   else if (!fullScreen && self->fullscreen_active())
