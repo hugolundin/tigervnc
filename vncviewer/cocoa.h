@@ -19,6 +19,8 @@
 #ifndef __VNCVIEWER_COCOA_H__
 #define __VNCVIEWER_COCOA_H__
 
+class Fl_Window;
+
 int cocoa_capture_display(Fl_Window *win, bool all_displays);
 void cocoa_release_display(Fl_Window *win);
 
@@ -41,5 +43,7 @@ int cocoa_set_num_lock_state(bool on);
 
 int cocoa_get_caps_lock_state(bool *on);
 int cocoa_get_num_lock_state(bool *on);
+
+const char* cocoa_get_display_name(int index);
 
 #endif

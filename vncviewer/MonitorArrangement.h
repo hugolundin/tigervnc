@@ -78,7 +78,7 @@ private:
   std::string description(int m);
 
   // Get the platform specific name of the given monitor.
-  std::string name(int m);
+  const char* name(int m);
 
   static void monitor_pressed(Fl_Widget *widget, void *user_data);
   

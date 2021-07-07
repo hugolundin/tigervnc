@@ -31,6 +31,10 @@
 #include <X11/Xutil.h>
 #endif
 
+#ifdef __APPLE__
+#include "cocoa.h"
+#endif
+
 #include <rfb/LogWriter.h>
 #include <FL/Fl.H>
 #include <FL/fl_draw.H>
@@ -273,50 +277,50 @@ bool MonitorArrangement::inside(
 
 std::string MonitorArrangement::description(int m)
 {
-  std::stringstream ss;
-  assert(m < (int) m_monitors.size());
-
-  // Get the platform specific name of the monitor. 
-  ss << name(m);
-
-  if (ss.str().empty()) {
-    int x, y, w, h;
-    Fl::screen_xywh(x, y, w, h, m);
-
-    // Fallback to showing resolution and position of monitor.
-    ss << w << "x" << h;
-  }
-
-  return ss.str();
-}
-
-std::string MonitorArrangement::name(int m)
-{
   assert(m < (int) m_monitors.size());
 
   int x, y, w, h;
   std::stringstream ss;
   Fl::screen_xywh(x, y, w, h, m);
 
+  // Get the platform specific name of the monitor. 
+  ss << name(m) << " ";
+
+  if (ss.str().empty()) {
+    ss << w << "x" << h;
+  } else {
+    ss << "(" << w << "x" << h << ")";
+  }
+
+  return ss.str();
+}
+
+const char* MonitorArrangement::name(int m)
+{
+  assert(m < (int) m_monitors.size());
+
 #if defined(WIN32)
-  // FIXME: Add support for showing the monitor name on Windows. 
+  // FIXME: Add support for showing the monitor name on Windows.
 #elif defined(__APPLE__)
-  // FIXME: Add support for showing the monitor name on macOS.
+  return cocoa_get_display_name(m);
 #else
 #ifdef HAVE_XRANDR
+  int x, y, w, h;
   int ev, err, xi_major;
+
   fl_open_display();
   assert(fl_display != NULL);
+  Fl::screen_xywh(x, y, w, h, m);
 
   if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
     vlog.info("Unable to find X11 RANDR extension.");
-    return std::string();
+    return "";
   }
 
   XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
   if (!res) {
     vlog.error("Unable to get XRRScreenResources for fl_display.");
-    return std::string();
+    return "";
   }
 
   for (int i = 0; i < res->ncrtc; i++) {
@@ -340,17 +344,14 @@ std::string MonitorArrangement::name(int m)
           continue;
         }
 
-        ss << output->name;
+        return output->name;
       }
     }
   }
-
-  // Show resolution and position in parenthesis.
-  ss << " (" << w << "x" << h << ")";
 #endif
 #endif
 
-  return ss.str();
+  return "";
 }
 
 void MonitorArrangement::monitor_pressed(Fl_Widget *widget, void *user_data)
