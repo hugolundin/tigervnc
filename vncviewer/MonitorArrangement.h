@@ -76,12 +76,12 @@ private:
 
   // Get a textual description of the given monitor.
   std::string description(int m);
-
-  // Get the platform specific name of the given monitor.
-  const char* name(int m);
+  
+  #if defined(HAVE_XRANDR)
+  const char* xrandr_get_display_name(int m);
+  #endif
 
   static void monitor_pressed(Fl_Widget *widget, void *user_data);
-  
   static void checkered_pattern_draw(
     int x, int y, int width, int height, Fl_Color color);
 };

@@ -31,13 +31,17 @@
 #include <X11/Xutil.h>
 #endif
 
+#include <rfb/LogWriter.h>
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
+
 #ifdef __APPLE__
 #include "cocoa.h"
 #endif
 
-#include <rfb/LogWriter.h>
-#include <FL/Fl.H>
-#include <FL/fl_draw.H>
+#ifdef WIN32
+#include "win32.h"
+#endif
 
 #include "MonitorArrangement.h"
 
@@ -283,28 +287,37 @@ std::string MonitorArrangement::description(int m)
   std::stringstream ss;
   Fl::screen_xywh(x, y, w, h, m);
 
-  // Get the platform specific name of the monitor. 
-  ss << name(m) << " ";
+#if defined(WIN32)
+  const size_t name_max_len = 1024;
+  char name[name_max_len] = {};
+
+  int bytes_written = win32_get_display_name(x, y, w, h, name, name_max_len);
+  if (bytes_written > 0)
+    ss << name;
+
+#elif defined(__APPLE__)
+  ss << cocoa_get_display_name(m);
+
+#elif defined(HAVE_XRANDR)
+  ss << xrandr_get_display_name(m);
+#endif
 
   if (ss.str().empty()) {
-    ss << w << "x" << h;
+    ss << " " << w << "x" << h;
   } else {
-    ss << "(" << w << "x" << h << ")";
+#if !defined(WIN32)
+    ss << " (" << w << "x" << h;
+#endif
   }
 
   return ss.str();
 }
 
-const char* MonitorArrangement::name(int m)
+#if defined(HAVE_XRANDR)
+const char* MonitorArrangement::xrandr_get_display_name(int m)
 {
   assert(m < (int) m_monitors.size());
 
-#if defined(WIN32)
-  // FIXME: Add support for showing the monitor name on Windows.
-#elif defined(__APPLE__)
-  return cocoa_get_display_name(m);
-#else
-#ifdef HAVE_XRANDR
   int x, y, w, h;
   int ev, err, xi_major;
 
@@ -348,11 +361,10 @@ const char* MonitorArrangement::name(int m)
       }
     }
   }
-#endif
-#endif
 
   return "";
 }
+#endif
 
 void MonitorArrangement::monitor_pressed(Fl_Widget *widget, void *user_data)
 {
