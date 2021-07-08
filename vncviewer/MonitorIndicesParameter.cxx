@@ -21,6 +21,7 @@
 #include <string>
 #include <limits>
 #include <set>
+#include <stdlib.h>
 #include <stdexcept>
 
 #include <FL/Fl.H>
@@ -123,21 +124,14 @@ static bool parse_number(std::string number, std::set<int>& indices)
     if (number.size() <= 0)
         return false;
 
-    try {
-        int v = std::stoi(number, NULL);
+    int v = strtol(number.c_str(), NULL, 0);
 
-        if (v < 0 || v > std::numeric_limits<int>::max()) {
-            vlog.error("Monitor index is too large: %s", number.c_str());
-            return false;
-        }
-
-        indices.insert(v-1);
-
-    } catch (std::out_of_range&) {
+    if (v < 0 || v > std::numeric_limits<int>::max()) {
         vlog.error("Monitor index is too large: %s", number.c_str());
         return false;
     }
 
+    indices.insert(v-1);
     return true;
 }
 
