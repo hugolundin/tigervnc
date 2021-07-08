@@ -385,7 +385,6 @@ void DesktopWindow::show()
 #endif
 }
 
-
 void DesktopWindow::draw()
 {
   bool redraw;
@@ -463,20 +462,28 @@ void DesktopWindow::draw()
     int ox, oy, ow, oh;
     int sx, sy, sw, sh;
 
-    bool multiple_monitors = !strcasecmp(fullScreenMode, "selected")
-                          || !strcasecmp(fullScreenMode, "all");
+    std::set<int> monitors;
+    rfb::Rect viewport_rect, screen_rect;
+    viewport_rect.setXYWH(x(), y(), w(), h());
 
-    // Make sure it's properly seen by adjusting it relative to the
-    // primary screen rather than the entire window
-    if (fullscreen_active() && multiple_monitors) {
-      assert(Fl::screen_count() >= 1);
-      // TODO: Get primary from selected monitors.
+    for (int i = 0; i < Fl::screen_count(); i++) {
+      Fl::screen_xywh(sx, sy, sw, sh, i);
+
+      // The screen with the smallest index that are enclosed by
+      // the viewport will be used for showing the overlay.
+      screen_rect.setXYWH(sx, sy, sw, sh);
+      if (screen_rect.enclosed_by(viewport_rect)) {
+        break;
+      }
+
+      // If no monitor inside the viewport was found,
+      // use the one primary instead.
       Fl::screen_xywh(sx, sy, sw, sh, 0);
-    } else {
-      sx = 0;
-      sy = 0;
-      sw = w();
     }
+
+    // Adjust the coordinates so they are relative to the viewport. 
+    sx -= x();
+    sy -= y();
 
     ox = X = sx + (sw - overlay->width()) / 2;
     oy = Y = sy + 50;
