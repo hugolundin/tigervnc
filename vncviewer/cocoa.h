@@ -21,7 +21,7 @@
 
 class Fl_Window;
 
-int cocoa_capture_display(Fl_Window *win, bool all_displays);
+int cocoa_capture_displays(Fl_Window *win);
 void cocoa_release_display(Fl_Window *win);
 
 typedef struct CGColorSpace *CGColorSpaceRef;

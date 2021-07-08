@@ -461,9 +461,8 @@ void DesktopWindow::draw()
   if (overlay) {
     int ox, oy, ow, oh;
     int sx, sy, sw, sh;
-
-    std::set<int> monitors;
     rfb::Rect viewport_rect, screen_rect;
+    
     viewport_rect.setXYWH(x(), y(), w(), h());
 
     for (int i = 0; i < Fl::screen_count(); i++) {
@@ -966,10 +965,8 @@ void DesktopWindow::grabKeyboard()
   }
 #elif defined(__APPLE__)
   int ret;
-
-  bool all_monitors = !strcasecmp(fullScreenMode, "all");
   
-  ret = cocoa_capture_display(this, all_monitors);
+  ret = cocoa_capture_displays(this);
   if (ret != 0) {
     vlog.error(_("Failure grabbing keyboard"));
     return;
