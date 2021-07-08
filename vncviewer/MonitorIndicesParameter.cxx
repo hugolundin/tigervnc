@@ -18,7 +18,10 @@
 
 #include <algorithm>
 #include <vector>
+#include <string>
+#include <limits>
 #include <set>
+#include <stdexcept>
 
 #include <FL/Fl.H>
 #include <rfb/LogWriter.h>
@@ -33,41 +36,22 @@ MonitorIndicesParameter::MonitorIndicesParameter(const char* name_, const char* 
 
 std::set<int> MonitorIndicesParameter::getParam()
 {
-    int value = 0;
-    int count = 0;
+    bool valid = false;
     std::set<int> indices;
     std::set<int> config_indices;
     std::vector<MonitorIndicesParameter::Monitor> monitors = this->monitors();
 
     if (monitors.size() <= 0) {
-        vlog.error("No monitors found.");
+        vlog.error("No monitors found on system.");
         return indices;
     }
 
-    // sscanf will modify the parsed string. Therefore
-    // we make a copy of it before parsing.
-    const char* config = getValueStr();
-
-    while (*config) {
-        if (1 == sscanf(config, "%d%n", &value, &count)) {
-
-            // Config indices start from 1, but we use them to access
-            // elements in the monitors array which is zero-indexed. 
-            config_indices.insert(value-1);
-        }
-
-        config += 1;
-
-        // Scan until we find a new number.
-        for (; *config; config++) {
-            if (*config >= '0' && *config <= '9') {
-                break;
-            }
-        }
+    valid = parse_indices(value, config_indices);
+    if (!valid) {
+        return indices;
     }
 
     if (config_indices.size() <= 0) {
-        vlog.debug("No indices parsed.");
         return indices;
     }
 
@@ -82,7 +66,16 @@ std::set<int> MonitorIndicesParameter::getParam()
 
 bool MonitorIndicesParameter::setParam(const char* value)
 {
-    // TODO: Validate value.
+    std::set<int> indices;
+
+    if (strlen(value) <= 0)
+        return false;
+
+    if (!parse_indices(value, indices)) {
+        vlog.error("Selected monitors not valid.");
+        return false;
+    }
+
     return StringParameter::setParam(value);
 }
 
@@ -123,6 +116,56 @@ bool MonitorIndicesParameter::setParam(std::set<int> indices)
     }
 
     return setParam(buf);
+}
+
+static bool parse_number(std::string number, std::set<int>& indices)
+{
+    if (number.size() <= 0)
+        return false;
+
+    try {
+        int v = std::stoi(number, NULL);
+
+        if (v < 0 || v > std::numeric_limits<int>::max()) {
+            vlog.error("Monitor index is too large: %s", number.c_str());
+            return false;
+        }
+
+        indices.insert(v-1);
+
+    } catch (std::out_of_range&) {
+        vlog.error("Monitor index is too large: %s", number.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+bool MonitorIndicesParameter::parse_indices(const char* value, std::set<int>& indices)
+{
+    char d;
+    std::string current;
+
+    for (size_t i = 0; i < strlen(value); i++) {
+        d = value[i];
+
+        if (d == ' ')
+            continue;
+        else if (d >= '0' && d <= '9')
+            current.push_back(d);
+        else if (d == ',') {
+            if (!parse_number(current, indices))
+                return false;
+
+            current.clear();
+        } else
+            return false;
+    }
+
+    if (!parse_number(current, indices))
+        return false;
+
+    return true;
 }
 
 std::vector<MonitorIndicesParameter::Monitor> MonitorIndicesParameter::monitors()
