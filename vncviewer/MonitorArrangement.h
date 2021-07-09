@@ -76,10 +76,7 @@ private:
 
   // Get a textual description of the given monitor.
   std::string description(int m);
-  
-  #if defined(HAVE_XRANDR)
-  const char* xrandr_get_display_name(int m);
-  #endif
+  int get_display_name(int m, char name[], size_t name_max_len);
 
   static void monitor_pressed(Fl_Widget *widget, void *user_data);
   static void checkered_pattern_draw(

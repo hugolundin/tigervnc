@@ -36,7 +36,14 @@
 #include <FL/fl_draw.H>
 
 #ifdef __APPLE__
-#include "cocoa.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include <objc/objc.h>
+#include <objc/objc-runtime.h>
+#include <IOKit/graphics/IOGraphicsLib.h>
+#include <IOKit/hidsystem/IOHIDLib.h>
+#include <IOKit/hidsystem/IOHIDParameter.h>
+#include <CoreGraphics/CGDirectDisplay.h>
+#include <CoreGraphics/CGDisplayConfiguration.h>
 #endif
 
 #ifdef WIN32
@@ -282,39 +289,54 @@ bool MonitorArrangement::inside(
 std::string MonitorArrangement::description(int m)
 {
   assert(m < (int) m_monitors.size());
-
-  int x, y, w, h;
-  std::stringstream ss;
-  Fl::screen_xywh(x, y, w, h, m);
-
-#if defined(WIN32)
   const size_t name_max_len = 1024;
   char name[name_max_len] = {};
+  int bytes_written = get_display_name(m, name, name_max_len);
 
-  int bytes_written = win32_get_display_name(x, y, w, h, name, name_max_len);
+  int x, y, w, h;
+  Fl::screen_xywh(x, y, w, h, m);
+  std::stringstream ss;
+
   if (bytes_written > 0)
-    ss << name;
-
-#elif defined(__APPLE__)
-  ss << cocoa_get_display_name(m);
-
-#elif defined(HAVE_XRANDR)
-  ss << xrandr_get_display_name(m);
-#endif
-
-  if (ss.str().empty())
-    ss << " " << w << "x" << h;
+    ss << name << " (" << w << "x" << h << ")";
   else
-    ss << " (" << w << "x" << h;
+    ss << w << "x" << h;
 
   return ss.str();
 }
 
-#if defined(HAVE_XRANDR)
-const char* MonitorArrangement::xrandr_get_display_name(int m)
+int MonitorArrangement::get_display_name(int m, char name[], size_t name_max_len)
 {
-  assert(m < (int) m_monitors.size());
+#if defined(WIN32)
+  int x, y, w, h;
+  Fl::screen_xywh(x, y, w, h, m);
+  return win32_get_display_name(x, y, w, h, name, name_max_len);
 
+#elif defined(__APPLE__)
+  CGDisplayCount count;
+  int bytes_written = 0;
+  CGDirectDisplayID displays[16];
+  
+  if (CGGetActiveDisplayList(16, displays, &count) != kCGErrorSuccess)
+    return -1;
+
+  if (count != (unsigned)Fl::screen_count())
+    return -1;
+
+  if (m >= (int)count)
+    return -1;
+
+  CGDirectDisplayID displayID = displays[m];
+  CFDictionaryRef info = IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);
+  CFDictionaryRef names = (CFDictionaryRef) CFDictionaryGetValue(info, kDisplayProductName);
+
+  CFTypeRef * keys = new CFTypeRef[CFDictionaryGetCount(names)];
+  CFDictionaryGetKeysAndValues(names, (const void **) keys, NULL);
+
+  return bytes_written;
+
+#else
+#if defined (HAVE_XRANDR)
   int x, y, w, h;
   int ev, err, xi_major;
 
@@ -324,13 +346,13 @@ const char* MonitorArrangement::xrandr_get_display_name(int m)
 
   if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
     vlog.info("Unable to find X11 RANDR extension.");
-    return "";
+    return -1;
   }
 
   XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
   if (!res) {
     vlog.error("Unable to get XRRScreenResources for fl_display.");
-    return "";
+    return -1;
   }
 
   for (int i = 0; i < res->ncrtc; i++) {
@@ -354,14 +376,20 @@ const char* MonitorArrangement::xrandr_get_display_name(int m)
           continue;
         }
 
-        return output->name;
+        if (strlen(output->name) >= name_max_len)
+          return -1;
+
+        return snprintf(name, name_max_len, "%.*s", (int)name_max_len, output->name);
       }
     }
   }
 
-  return "";
-}
+  return -1;
+
+#endif // !HAVE_XRANDR
+  return 0;
 #endif
+}
 
 void MonitorArrangement::monitor_pressed(Fl_Widget *widget, void *user_data)
 {
