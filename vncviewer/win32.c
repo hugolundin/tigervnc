@@ -423,7 +423,7 @@ int win32_has_altgr(void)
 typedef struct {
 	int x, y, w, h;
   char* name;
-	size_t name_max_len;
+	size_t name_len;
 	int bytes_written;
 } EnumCallbackData;
 
@@ -441,8 +441,8 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(
 	int h = info.rcMonitor.bottom - info.rcMonitor.top;
 
 	if ((data->x == x) && (data->y == y) && (data->w == w) && (data->h == h)) {
-		data->bytes_written = snprintf(data->name, data->name_max_len,
-			"%.*s", (int)(data->name_max_len - 1), info.szDevice);
+		data->bytes_written = snprintf(data->name, data->name_len,
+			"%.*s", (int)(data->name_len - 1), info.szDevice);
 
 		if (data->bytes_written < 0)
 			return FALSE;
@@ -455,7 +455,7 @@ static BOOL CALLBACK EnumDisplayMonitorsCallback(
 	return TRUE;	
 }
 
-int win32_get_display_name(int x, int y, int w, int h, char name[], size_t name_max_len)
+int win32_get_monitor_name(int x, int y, int w, int h, char name[], size_t name_len)
 {
 	EnumCallbackData data = {
 		.x = x,
@@ -463,7 +463,7 @@ int win32_get_display_name(int x, int y, int w, int h, char name[], size_t name_
 		.w = w,
 		.h = h,
 		.name = name,
-		.name_max_len = name_max_len,
+		.name_len = name_len,
 		.bytes_written = -1
 	};
 

@@ -506,28 +506,3 @@ int cocoa_get_num_lock_state(bool *on)
 {
   return cocoa_get_modifier_lock_state(kIOHIDNumLockState, on);
 }
-
-const char* cocoa_get_display_name(int index)
-{
-  CGDirectDisplayID displays[16];
-  CGDisplayCount count;
-
-  if (CGGetActiveDisplayList(16, displays, &count) != kCGErrorSuccess)
-    return "";
-
-  if (count != (unsigned)Fl::screen_count())
-    return "";
-
-  if (index >= count)
-    return "";
-
-  NSString *displayName = @"";
-  CGDirectDisplayID displayID = displays[index];
-  NSDictionary *info = (__bridge NSDictionary*) IODisplayCreateInfoDictionary(CGDisplayIOServicePort(displayID), kIODisplayOnlyPreferredName);
-  NSDictionary *names = [info objectForKey:[NSString stringWithUTF8String:kDisplayProductName]];
-
-  if ([names count] > 0)
-    displayName = [names objectForKey:[[names allKeys] objectAtIndex: 0]];
-
-  return displayName.UTF8String;
-}
