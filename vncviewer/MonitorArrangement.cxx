@@ -302,13 +302,10 @@ std::string MonitorArrangement::description(int m)
   ss << xrandr_get_display_name(m);
 #endif
 
-  if (ss.str().empty()) {
+  if (ss.str().empty())
     ss << " " << w << "x" << h;
-  } else {
-#if !defined(WIN32)
+  else
     ss << " (" << w << "x" << h;
-#endif
-  }
 
   return ss.str();
 }

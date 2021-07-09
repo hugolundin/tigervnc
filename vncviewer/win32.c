@@ -428,8 +428,7 @@ typedef struct {
 } EnumCallbackData;
 
 static BOOL CALLBACK EnumDisplayMonitorsCallback(
-	HMONITOR monitor, HDC deviceContext, LPRECT rect, LPARAM userData
-	)
+	HMONITOR monitor, HDC deviceContext, LPRECT rect, LPARAM userData)
 {
 	EnumCallbackData *data = (EnumCallbackData *)userData;
 	MONITORINFOEX info;
