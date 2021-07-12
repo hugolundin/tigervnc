@@ -340,7 +340,7 @@ int MonitorArrangement::get_monitor_name(int m, char name[], size_t name_len)
     CFTypeRef * names = new CFTypeRef[dict_len];
     CFDictionaryGetKeysAndValues(dict, NULL, (const void **) names);
 
-    if ((sizeof(names) / sizeof(*names)) > 0) {
+    if (names[0]) {
 
       // Because of `kIODisplayOnlyPreferredName` names *should* only contain the name with
       // the current system localization. 
