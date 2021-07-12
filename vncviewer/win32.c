@@ -422,7 +422,7 @@ int win32_has_altgr(void)
 
 typedef struct {
 	int x, y, w, h;
-  char* name;
+    char* name;
 	size_t name_len;
 	int bytes_written;
 } EnumCallbackData;
