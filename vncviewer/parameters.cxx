@@ -766,10 +766,15 @@ char* loadViewerParameters(const char *filename) {
       invalidParameterName = false;
 
     } else {
-      invalidParameterName = findAndSetViewerParameterFromValue(parameterArray, sizeof(parameterArray), value, line, lineNr, filepath)
-        && findAndSetViewerParameterFromValue(readOnlyParameterArray, sizeof(readOnlyParameterArray), value, line, lineNr, filepath);
-    }
+      invalidParameterName = findAndSetViewerParameterFromValue(parameterArray, sizeof(parameterArray),
+                                                                value, line, lineNr, filepath);
 
+      if (invalidParameterName) {
+        invalidParameterName = findAndSetViewerParameterFromValue(readOnlyParameterArray, sizeof(readOnlyParameterArray), 
+                                                                  value, line, lineNr, filepath);
+      }
+    }
+    
     if (invalidParameterName)
       vlog.info(_("Unknown parameter %s on line %d in file %s"),
                 line, lineNr, filepath);
