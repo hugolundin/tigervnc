@@ -469,19 +469,23 @@ void DesktopWindow::draw()
       rfb::Rect viewport_rect, screen_rect;
       viewport_rect.setXYWH(x(), y(), w(), h());
 
+      bool found_enclosed_screen = false;
       for (int i = 0; i < Fl::screen_count(); i++) {
         Fl::screen_xywh(sx, sy, sw, sh, i);
 
         // The screen with the smallest index that are enclosed by
         // the viewport will be used for showing the overlay.
         screen_rect.setXYWH(sx, sy, sw, sh);
-        if (screen_rect.enclosed_by(viewport_rect))
+        if (screen_rect.enclosed_by(viewport_rect)) {
+          found_enclosed_screen = true;
           break;
-
-        // If no monitor inside the viewport was found,
-        // use the one primary instead.
-        Fl::screen_xywh(sx, sy, sw, sh, 0);
+        }
       }
+
+      // If no monitor inside the viewport was found,
+      // use the one primary instead.
+      if (!found_enclosed_screen)
+        Fl::screen_xywh(sx, sy, sw, sh, 0);
 
       // Adjust the coordinates so they are relative to the viewport. 
       sx -= x();
