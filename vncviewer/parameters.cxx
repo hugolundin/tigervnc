@@ -104,7 +104,7 @@ BoolParameter maximize("Maximize", "Maximize viewer window", false);
 BoolParameter fullScreen("FullScreen", "Enable full screen", false);
 StringParameter fullScreenMode("FullScreenMode", "Full screen mode", "Current");
 BoolParameter fullScreenAllMonitors("FullScreenAllMonitors",
-                                    "Enable full screen over all monitors",
+                                    "[DEPRECATED] Enable full screen over all monitors",
                                     false);
 MonitorIndicesParameter fullScreenSelectedMonitors("FullScreenSelectedMonitors",
                                          "Enable full screen over the given selected monitors",
