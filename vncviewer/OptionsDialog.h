@@ -67,7 +67,6 @@ protected:
 
   static void handleClipboard(Fl_Widget *widget, void *data);
 
-  static void handleFullScreen(Fl_Widget *widget, void *data);
   static void handleFullScreenMode(Fl_Widget *widget, void *data);
 
   static void handleCancel(Fl_Widget *widget, void *data);
