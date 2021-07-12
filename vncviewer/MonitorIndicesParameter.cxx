@@ -75,7 +75,7 @@ bool MonitorIndicesParameter::setParam(const char* value)
         return false;
 
     if (!parse_indices(value, &indices)) {
-        vlog.error(_("Parsing failed for FullScreenSelectedMonitors."));
+        vlog.error(_("Invalid FullScreenSelectedMonitors configuration."));
         return false;
     }
 
@@ -156,12 +156,16 @@ bool MonitorIndicesParameter::parse_indices(const char* value, std::set<int> *in
         else if (d >= '0' && d <= '9')
             current.push_back(d);
         else if (d == ',') {
-            if (!parse_number(current, indices))
+            if (!parse_number(current, indices)) {
+                vlog.error(_("Invalid monitor index '%s' in FullScreenSelectedMonitors"), current.c_str());
                 return false;
+            }
 
             current.clear();
-        } else
+        } else {
+            vlog.error(_("Unexpected character '%c' in FullScreenSelectedMonitors"), d);
             return false;
+        }
     }
 
     if (!parse_number(current, indices))
