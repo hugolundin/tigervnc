@@ -461,29 +461,38 @@ void DesktopWindow::draw()
   if (overlay) {
     int ox, oy, ow, oh;
     int sx, sy, sw, sh;
-    rfb::Rect viewport_rect, screen_rect;
-    
-    viewport_rect.setXYWH(x(), y(), w(), h());
 
-    for (int i = 0; i < Fl::screen_count(); i++) {
-      Fl::screen_xywh(sx, sy, sw, sh, i);
+    bool multiple_monitors = !strcasecmp(fullScreenMode, "selected")
+                          || !strcasecmp(fullScreenMode, "all");
 
-      // The screen with the smallest index that are enclosed by
-      // the viewport will be used for showing the overlay.
-      screen_rect.setXYWH(sx, sy, sw, sh);
-      if (screen_rect.enclosed_by(viewport_rect)) {
-        break;
+    if (fullscreen_active() && multiple_monitors) {
+      rfb::Rect viewport_rect, screen_rect;
+      viewport_rect.setXYWH(x(), y(), w(), h());
+
+      for (int i = 0; i < Fl::screen_count(); i++) {
+        Fl::screen_xywh(sx, sy, sw, sh, i);
+
+        // The screen with the smallest index that are enclosed by
+        // the viewport will be used for showing the overlay.
+        screen_rect.setXYWH(sx, sy, sw, sh);
+        if (screen_rect.enclosed_by(viewport_rect))
+          break;
+
+        // If no monitor inside the viewport was found,
+        // use the one primary instead.
+        Fl::screen_xywh(sx, sy, sw, sh, 0);
       }
 
-      // If no monitor inside the viewport was found,
-      // use the one primary instead.
-      Fl::screen_xywh(sx, sy, sw, sh, 0);
+      // Adjust the coordinates so they are relative to the viewport. 
+      sx -= x();
+      sy -= y();
+
+    } else {
+      sx = 0;
+      sy = 0;
+      sw = w();
     }
-
-    // Adjust the coordinates so they are relative to the viewport. 
-    sx -= x();
-    sy -= y();
-
+    
     ox = X = sx + (sw - overlay->width()) / 2;
     oy = Y = sy + 50;
     ow = overlay->width();
