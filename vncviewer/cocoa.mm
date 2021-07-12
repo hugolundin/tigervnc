@@ -29,7 +29,6 @@
 
 #include <IOKit/hidsystem/IOHIDLib.h>
 #include <IOKit/hidsystem/IOHIDParameter.h>
-#import <IOKit/graphics/IOGraphicsLib.h>
 
 #define XK_LATIN1
 #define XK_MISCELLANY
