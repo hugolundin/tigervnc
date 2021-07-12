@@ -102,8 +102,8 @@ IntParameter qualityLevel("QualityLevel",
 
 BoolParameter maximize("Maximize", "Maximize viewer window", false);
 BoolParameter fullScreen("FullScreen", "Enable full screen", false);
-StringParameter fullScreenMode("FullScreenMode", "Mode to use when full screen is enabled. "
-                                                 "Can be either Current, Selected or All",
+StringParameter fullScreenMode("FullScreenMode", "Specify what mode to use when full screen is enabled. "
+                                                 "Should be either Current, Selected, or All",
                                                  "Current");
 BoolParameter fullScreenAllMonitors("FullScreenAllMonitors",
                                     "[DEPRECATED] Enable full screen over all monitors",
@@ -774,7 +774,7 @@ char* loadViewerParameters(const char *filename) {
                                                                   value, line, lineNr, filepath);
       }
     }
-    
+
     if (invalidParameterName)
       vlog.info(_("Unknown parameter %s on line %d in file %s"),
                 line, lineNr, filepath);
