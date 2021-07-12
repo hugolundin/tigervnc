@@ -134,8 +134,8 @@ static bool parse_number(std::string number, std::set<int>& indices)
 
     int v = strtol(number.c_str(), NULL, 0);
 
-    if (v < 0 || v > std::numeric_limits<int>::max()) {
-        vlog.error(_("The given index (%s) is too large to be valid."), number.c_str());
+    if (v < 0 || v > INT_MAX) {
+        vlog.error(_("The given monitor index (%s) is too large to be valid."), number.c_str());
         return false;
     }
 
