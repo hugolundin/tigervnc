@@ -102,12 +102,15 @@ IntParameter qualityLevel("QualityLevel",
 
 BoolParameter maximize("Maximize", "Maximize viewer window", false);
 BoolParameter fullScreen("FullScreen", "Enable full screen", false);
-StringParameter fullScreenMode("FullScreenMode", "Full screen mode", "Current");
+StringParameter fullScreenMode("FullScreenMode", "Mode to use when full screen is enabled. "
+                                                 "Can be either Current, Selected or All",
+                                                 "Current");
 BoolParameter fullScreenAllMonitors("FullScreenAllMonitors",
                                     "[DEPRECATED] Enable full screen over all monitors",
                                     false);
 MonitorIndicesParameter fullScreenSelectedMonitors("FullScreenSelectedMonitors",
-                                         "Enable full screen over the given selected monitors",
+                                         "Use the given list of monitors in full screen"
+                                         " when FullScreenMode = Selected.",
                                          "");
 StringParameter desktopSize("DesktopSize",
                             "Reconfigure desktop size on the server on "
