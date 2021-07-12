@@ -386,7 +386,7 @@ int MonitorArrangement::get_monitor_name(int m, char name[], size_t name_len)
 
   XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
   if (!res) {
-    vlog.error(_("Failed to get XRRScreenResources for Window 0x%08lx"), DefaultRootWindow(fl_display));
+    vlog.error(_("Failed to get XRRScreenResources for root window."));
     return -1;
   }
 
