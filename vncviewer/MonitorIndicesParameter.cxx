@@ -63,6 +63,12 @@ std::set<int> MonitorIndicesParameter::getParam()
             indices.insert(monitors[i].fltk_index);
     }
 
+    // Go through and log all indices that was in the configuration, but could not be found on the system.
+    for (std::set<int>::iterator it = config_indices.begin(); it != config_indices.end(); it++) {
+        if (std::find(indices.begin(), indices.end(), *it) == indices.end())
+            vlog.info(_("Monitor index %d does not exist."), (*it)+1);
+    }
+
     return indices;
 }
 
