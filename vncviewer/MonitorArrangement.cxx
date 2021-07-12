@@ -50,6 +50,7 @@
 #include "win32.h"
 #endif
 
+#include "i18n.h"
 #include "MonitorArrangement.h"
 
 static rfb::LogWriter vlog("MonitorArrangement");
@@ -380,13 +381,13 @@ int MonitorArrangement::get_monitor_name(int m, char name[], size_t name_len)
   Fl::screen_xywh(x, y, w, h, m);
 
   if (!XQueryExtension(fl_display, "RANDR", &xi_major, &ev, &err)) {
-    vlog.info("Unable to find X11 RANDR extension.");
+    vlog.info(_("Failed to get monitor name because X11 RandR could not be found."));
     return -1;
   }
 
   XRRScreenResources *res = XRRGetScreenResources(fl_display, DefaultRootWindow(fl_display));
   if (!res) {
-    vlog.error("Unable to get XRRScreenResources for fl_display.");
+    vlog.error(_("Failed to get XRRScreenResources for Window 0x%08lx"), DefaultRootWindow(fl_display));
     return -1;
   }
 
@@ -394,7 +395,7 @@ int MonitorArrangement::get_monitor_name(int m, char name[], size_t name_len)
     XRRCrtcInfo *crtc = XRRGetCrtcInfo(fl_display, res, res->crtcs[i]);
 
     if (!crtc) {
-      vlog.error("Unable to get XRRCrtcInfo for crtc %d.", i);
+      vlog.error(_("Failed to get XRRCrtcInfo for crtc %d"), i);
       continue;
     }
 
@@ -407,7 +408,7 @@ int MonitorArrangement::get_monitor_name(int m, char name[], size_t name_len)
       if (monitor_found) {
         XRROutputInfo *output = XRRGetOutputInfo(fl_display, res, crtc->outputs[j]);
         if (!output) {
-          vlog.error("Unable to get XRROutputInfo for crtc %d, output %d.", i, j);
+          vlog.error(_("Failed to get XRROutputInfo for crtc %d, output %d."), i, j);
           continue;
         }
 

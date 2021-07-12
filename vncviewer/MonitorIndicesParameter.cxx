@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdexcept>
 
+#include "i18n.h"
 #include <FL/Fl.H>
 #include <rfb/LogWriter.h>
 
@@ -43,7 +44,7 @@ std::set<int> MonitorIndicesParameter::getParam()
     std::vector<MonitorIndicesParameter::Monitor> monitors = this->monitors();
 
     if (monitors.size() <= 0) {
-        vlog.error("No monitors found on system.");
+        vlog.error(_("Failed to get monitors."));
         return indices;
     }
 
@@ -73,7 +74,7 @@ bool MonitorIndicesParameter::setParam(const char* value)
         return false;
 
     if (!parse_indices(value, indices)) {
-        vlog.error("Selected monitors not valid.");
+        vlog.error(_("Parsing failed for FullScreenSelectedMonitors."));
         return false;
     }
 
@@ -89,7 +90,7 @@ bool MonitorIndicesParameter::setParam(std::set<int> indices)
     std::vector<MonitorIndicesParameter::Monitor> monitors = this->monitors();
 
     if (monitors.size() <=  0) {
-        vlog.error("No monitors found.");
+        vlog.error(_("Failed to get monitors."));
         // Don't return, store the configuration anyways.
     }
 
@@ -127,7 +128,7 @@ static bool parse_number(std::string number, std::set<int>& indices)
     int v = strtol(number.c_str(), NULL, 0);
 
     if (v < 0 || v > std::numeric_limits<int>::max()) {
-        vlog.error("Monitor index is too large: %s", number.c_str());
+        vlog.error(_("The given index (%s) is too large to be valid."), number.c_str());
         return false;
     }
 
