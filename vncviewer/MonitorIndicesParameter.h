@@ -21,6 +21,7 @@
 
 #include <set>
 #include <vector>
+
 #include <rfb/Configuration.h>
 
 class MonitorIndicesParameter: public rfb::StringParameter {

@@ -21,8 +21,8 @@
 
 #include <string>
 
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Group.H>
+class Fl_Group;
+class Fl_Button;
 
 class MonitorArrangement: public Fl_Group {
 public:

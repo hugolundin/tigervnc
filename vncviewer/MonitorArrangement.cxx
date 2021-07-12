@@ -24,6 +24,10 @@
 #include <assert.h>
 #include <algorithm>
 
+#include <FL/Fl.H>
+#include <FL/fl_draw.H>
+#include <FL/Fl_Button.H>
+
 #if defined(HAVE_XRANDR) && !defined(__APPLE__)
 #include <X11/extensions/Xrandr.h>
 #include <X11/X.h>
@@ -31,20 +35,15 @@
 #include <X11/Xutil.h>
 #endif
 
-#include <rfb/LogWriter.h>
-#include <FL/Fl.H>
-#include <FL/fl_draw.H>
-
 #ifdef __APPLE__
-#include <CoreFoundation/CoreFoundation.h>
-#include <objc/objc.h>
-#include <objc/objc-runtime.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
 #include <IOKit/hidsystem/IOHIDLib.h>
 #include <IOKit/hidsystem/IOHIDParameter.h>
 #include <CoreGraphics/CGDirectDisplay.h>
 #include <CoreGraphics/CGDisplayConfiguration.h>
 #endif
+
+#include <rfb/LogWriter.h>
 
 #ifdef WIN32
 #include "win32.h"
