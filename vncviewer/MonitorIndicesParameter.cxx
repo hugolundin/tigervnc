@@ -48,7 +48,7 @@ std::set<int> MonitorIndicesParameter::getParam()
         return indices;
     }
 
-    valid = parse_indices(value, config_indices);
+    valid = parse_indices(value, &config_indices);
     if (!valid) {
         return indices;
     }
@@ -74,7 +74,7 @@ bool MonitorIndicesParameter::setParam(const char* value)
     if (strlen(value) <= 0)
         return false;
 
-    if (!parse_indices(value, indices)) {
+    if (!parse_indices(value, &indices)) {
         vlog.error(_("Parsing failed for FullScreenSelectedMonitors."));
         return false;
     }
@@ -127,7 +127,7 @@ bool MonitorIndicesParameter::setParam(std::set<int> indices)
     return setParam(buf);
 }
 
-static bool parse_number(std::string number, std::set<int>& indices)
+static bool parse_number(std::string number, std::set<int> *indices)
 {
     if (number.size() <= 0)
         return false;
@@ -139,11 +139,11 @@ static bool parse_number(std::string number, std::set<int>& indices)
         return false;
     }
 
-    indices.insert(v-1);
+    indices->insert(v-1);
     return true;
 }
 
-bool MonitorIndicesParameter::parse_indices(const char* value, std::set<int>& indices)
+bool MonitorIndicesParameter::parse_indices(const char* value, std::set<int> *indices)
 {
     char d;
     std::string current;

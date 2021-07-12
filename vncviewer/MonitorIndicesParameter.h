@@ -36,7 +36,7 @@ private:
         int fltk_index;
     } Monitor;
 
-    bool parse_indices(const char* value, std::set<int>& indices);
+    bool parse_indices(const char* value, std::set<int> *indices);
     std::vector<MonitorIndicesParameter::Monitor> monitors();
     static int sort_cb(const void*, const void*);
 };
