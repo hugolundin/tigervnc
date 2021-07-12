@@ -58,7 +58,7 @@ static const Fl_Boxtype FL_CHECKERED_BOX = FL_FREE_BOXTYPE;
 MonitorArrangement::MonitorArrangement(
    int x, int y, int w, int h)
 :  Fl_Group(x, y, w, h),
-   SELECTION_COLOR(fl_rgb_color(53, 132, 228)),
+   SELECTION_COLOR(fl_lighter(FL_BLUE)),
    AVAILABLE_COLOR(fl_lighter(fl_lighter(fl_lighter(FL_BACKGROUND_COLOR)))),
    m_monitors()
 {
